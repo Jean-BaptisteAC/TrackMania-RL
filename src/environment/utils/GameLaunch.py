@@ -1,17 +1,21 @@
 import ctypes
-from environment.utils.constants import GAME_PATH, GAME_DIR, GAME_WINDOW_NAME
 import subprocess
 from threading import Thread
 import time
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class GameLauncher:
     def __init__(
         self,
-        game_path = GAME_PATH,
-        game_dir = GAME_DIR,
-        game_window_name = GAME_WINDOW_NAME 
+        game_path = os.getenv('GAME_PATH'),
+        game_dir = os.getenv('GAME_DIR'),
+        game_window_name = os.getenv('GAME_WINDOW_NAME') 
         ) -> None:
+        
+        print(game_path, game_dir, game_window_name)
 
         self.game_path = game_path
         self.game_dir = game_dir

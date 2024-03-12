@@ -11,3 +11,4 @@ tqdm
 opencv-python
 pywin32
 keyboard
+tensorboard

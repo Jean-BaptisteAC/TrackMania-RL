@@ -3,8 +3,11 @@ import time
 import win32gui
 import numpy as np
 from enum import Enum
-from environment.utils.constants import GAME_WINDOW_NAME
 import vgamepad as vg
+
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class ArrowInput(Enum):
     UP = 0xC8
@@ -85,7 +88,7 @@ def refocus():
 
 class KeyboardInputManager:
     def __init__(
-        self, input_duration: float = 0.05, window_name: str = GAME_WINDOW_NAME
+        self, input_duration: float = 0.05, window_name: str = os.getenv('GAME_WINDOW_NAME')
     ) -> None:
         self.input_duration = input_duration
         self.window_name = window_name
@@ -134,7 +137,7 @@ class KeyboardInputManager:
             self.release_key(ArrowInput.RIGHT)
 
 class GamepadInputManager:
-    def __init__(self, window_name: str = GAME_WINDOW_NAME) -> None:
+    def __init__(self, window_name: str = os.getenv('GAME_WINDOW_NAME')) -> None:
         self.gamepad = vg.VX360Gamepad()
         self.window_name = window_name
 

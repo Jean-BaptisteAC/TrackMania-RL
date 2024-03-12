@@ -4,14 +4,14 @@ import numpy as np
 from gymnasium import Env
 from gymnasium.spaces import Box, MultiBinary
 
-from environment.TMIClient import ThreadedClient
-from environment.utils.GameCapture import Lidar_Vision
-from environment.utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
-from environment.utils.GameLaunch import GameLauncher
+from .TMIClient import ThreadedClient
+from .utils.GameCapture import Lidar_Vision
+from .utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
+from .utils.GameLaunch import GameLauncher
  
 ArrowsActionSpace = MultiBinary(4,)
 ControllerActionSpace = Box(
-    low=np.array([-1.0, -1.0]), high=np.array([1.0, 1.0]), shape=(2,), dtype=np.float32
+    low=np.array([0, -1.0]), high=np.array([1.0, 1.0]), shape=(2,), dtype=np.float32
 )
 ActType = TypeVar("ActType")
 ObsType = TypeVar("ObsType")

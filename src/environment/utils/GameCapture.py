@@ -2,15 +2,18 @@ import cv2
 import numpy as np
 import win32.win32gui as wind32
 from mss import mss
-from environment.utils.constants import GAME_WINDOW_NAME
 from scipy.spatial import distance
 
+import os
 import sys
 sys.path.append('utils')
 
+from dotenv import load_dotenv
+load_dotenv()
+
 class Lidar_Vision():
     def __init__(self):
-        self.hwnd = wind32.FindWindow(None, GAME_WINDOW_NAME)
+        self.hwnd = wind32.FindWindow(None, os.getenv('GAME_WINDOW_NAME'))
 
         left, top, right, bottom = wind32.GetWindowRect(self.hwnd)
         bounding_box = left + 10, top + 40, right -10, bottom-10
