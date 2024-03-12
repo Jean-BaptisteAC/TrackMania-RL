@@ -1,0 +1,12 @@
+numpy
+gym
+torch
+stable-baselines3
+tminterface
+python-dotenv
+mss
+scipy
+vgamepad
+tqdm
+opencv-python
+pywin32

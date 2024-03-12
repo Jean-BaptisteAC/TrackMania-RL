@@ -2,3 +2,5 @@
 
 logs/*
 models/*
+
+.venv_*
