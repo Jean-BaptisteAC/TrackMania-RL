@@ -1,6 +1,6 @@
 from typing import TypeVar
 from stable_baselines3.common.env_checker import check_env 
-from env.TMNFEnv import TrackmaniaEnv
+from src.environment.TMNFEnv import TrackmaniaEnv
 import numpy as np
 import keyboard
 T = TypeVar("T")

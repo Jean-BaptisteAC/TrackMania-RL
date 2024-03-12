@@ -4,10 +4,10 @@ import numpy as np
 from gymnasium import Env
 from gymnasium.spaces import Box, MultiBinary
 
-from env.TMIClient import ThreadedClient
-from env.utils.GameCapture import Lidar_Vision
-from env.utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
-from env.utils.GameLaunch import GameLauncher
+from environment.TMIClient import ThreadedClient
+from environment.utils.GameCapture import Lidar_Vision
+from environment.utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
+from environment.utils.GameLaunch import GameLauncher
  
 ArrowsActionSpace = MultiBinary(4,)
 ControllerActionSpace = Box(

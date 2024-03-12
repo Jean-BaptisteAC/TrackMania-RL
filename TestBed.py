@@ -1,5 +1,5 @@
 
-from env.TMNFEnv import TrackmaniaEnv
+from src.environment.TMNFEnv import TrackmaniaEnv
 from stable_baselines3 import PPO, SAC
 from tqdm.auto import tqdm
 import torch as th

@@ -1,5 +1,5 @@
 import ctypes
-from env.utils.constants import GAME_PATH, GAME_DIR, GAME_WINDOW_NAME
+from environment.utils.constants import GAME_PATH, GAME_DIR, GAME_WINDOW_NAME
 import subprocess
 from threading import Thread
 import time

@@ -1,4 +1,4 @@
-from env.utils.GameCapture import Lidar_Vision
+from src.environment.utils.GameCapture import Lidar_Vision
 
 if __name__ == "__main__":
     

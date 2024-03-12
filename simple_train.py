@@ -1,5 +1,5 @@
 from TestBed import TestBed
-from env.TMNFEnv import TrackmaniaEnv
+from src.environment.TMNFEnv import TrackmaniaEnv
 from stable_baselines3.common.env_checker import check_env 
 
 from stable_baselines3 import PPO
