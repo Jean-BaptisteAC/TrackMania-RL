@@ -53,8 +53,6 @@ class ThreadedClient:
             self.data = client.sim_state
             self._lock.release()
 
-    
-
 if __name__ == "__main__":
     simthread = ThreadedClient()
     

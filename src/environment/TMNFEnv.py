@@ -5,13 +5,13 @@ from gymnasium import Env
 from gymnasium.spaces import Box, MultiBinary
 
 from .TMIClient import ThreadedClient
-from .utils.GameCapture import Lidar_Vision
+from .utils.GameCapture import Lidar_Vision, Image_Vision
 from .utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
 from .utils.GameLaunch import GameLauncher
  
 ArrowsActionSpace = MultiBinary(4,)
 ControllerActionSpace = Box(
-    low=np.array([0, -1.0]), high=np.array([1.0, 1.0]), shape=(2,), dtype=np.float32
+    low=np.array([-1.0, -1.0]), high=np.array([1.0, 1.0]), shape=(2,), dtype=np.float32
 )
 ActType = TypeVar("ActType")
 ObsType = TypeVar("ObsType")
@@ -25,8 +25,8 @@ class TrackmaniaEnv(Env):
     """
     def __init__(
         self,
-        action_space: str = "arrows",
-        observation_size: int = 16,
+        action_space: str = "controller",
+        observation_space: str = "lidar",
     ):
         if action_space == "arrows":
             self.action_space = ArrowsActionSpace
@@ -37,9 +37,20 @@ class TrackmaniaEnv(Env):
 
         self.special_input_manager = KeyboardInputManager()
 
-        self.observation_space = Box(
-            low=-1.0, high=1.0, shape=(observation_size,), dtype=np.float64
-        )
+        if observation_space == "lidar":
+            self.observation_type = "lidar"
+            self.observation_space = Box(
+                low=-1.0, high=1.0, shape=(16,), dtype=np.float64
+            )
+            self.viewer = Lidar_Vision()
+
+        elif observation_space == "image":
+            self.observation_type = "image"
+            self.observation_space = Box(
+                low=0, high=255, shape=(53, 110, 1), dtype=np.uint8
+            )
+            self.viewer = Image_Vision()
+
         game_launcher  = GameLauncher()
         if not game_launcher.game_started:
             game_launcher.start_game()
@@ -47,13 +58,11 @@ class TrackmaniaEnv(Env):
             input("press enter when game is ready")
             time.sleep(4)
         
-        self.viewer = Lidar_Vision()
         self.simthread = ThreadedClient()
         self.total_reward = 0.0
         self.current_race_time = 0
-        self.max_race_time = 12_000
+        self.max_race_time = 20_000
         self.first_init = True
-    
         self.i_step = 0
 
     def close(self):
@@ -63,14 +72,11 @@ class TrackmaniaEnv(Env):
 
         self._continuous_action_to_command(action)
         
-        self.viewer.get_frame()
-        self.viewer.get_rays()
-        self.viewer.show()
-        
         velocity_reward, done = self.check_state()
-        lidar, min_distance = self.viewer.get_obs()
-        velocity = self.speedometer
-        obs = np.concatenate([lidar, velocity])
+        screen_observation, min_distance = self.viewer.get_obs()
+        self.viewer.show()
+
+        observation = self.observation(screen_observation)
         
         distance_reward = abs(1 - min_distance/0.27)
         alpha = 0.5
@@ -81,11 +87,11 @@ class TrackmaniaEnv(Env):
         truncated = False
         info = {}
 
-        return obs, reward, done, truncated, info
+        return observation, reward, done, truncated, info
 
     def check_state(self):
         done = False
-        reward = self.reward
+        reward = self.velocity()/100
 
         if self.position[0] < 41.0:
             done = True
@@ -102,6 +108,17 @@ class TrackmaniaEnv(Env):
             self.reset()
         
         return reward, done
+    
+
+    def observation(self, screen_observation):
+        if self.observation_type == "lidar":
+            velocity = self.speedometer()
+            observation = np.concatenate([screen_observation, velocity])
+
+        elif self.observation_type == "image":
+            observation = screen_observation
+
+        return observation 
         
     def reset(self, seed=0):
         self.total_reward = 0.0
@@ -112,14 +129,11 @@ class TrackmaniaEnv(Env):
             self.current_race_time = self.race_time
         self._restart_race()
         
-        self.viewer.get_frame()
-        self.viewer.get_rays()
-        lidar, _ = self.viewer.get_obs()
-        velocity = self.speedometer
-        obs = np.concatenate([lidar, velocity])
+        screen_observation, _ = self.viewer.get_obs()
+        observation = self.observation(screen_observation)
         info = {}
         
-        return obs, info
+        return observation, info
 
     def action_to_command(self, action):
         if isinstance(self.action_space, MultiBinary):
@@ -139,20 +153,36 @@ class TrackmaniaEnv(Env):
         time.sleep(0)
         self.special_input_manager.release_key(ArrowInput.RETURN)
 
+    # Computation of the direction vector of the car
+    def vehicle_normal_vector(self):
+        yaw_pitch_roll = self.state.yaw_pitch_roll
+
+        # Track mania X, Y, Z is not the usual system: Y corresponds to the altitude.
+        # We do not take into account the roll as it has no impact on the direction of the car
+        orientation = [np.sin(yaw_pitch_roll[0]),
+                    -np.sin(yaw_pitch_roll[1]), 
+                    np.cos(yaw_pitch_roll[0])]
+        orientation = orientation / np.linalg.norm(orientation)
+
+        return orientation
+    
+    def velocity(self):
+        
+        # Projection of the speed vector on the direction vector of the car
+        velocity_oriented = np.dot(self.vehicle_normal_vector(), 
+                                 self.state.velocity)
+        
+        # Conversion from m/s to km/h
+        velocity_oriented = velocity_oriented*3.6 
+        return velocity_oriented
+    
+    def speedometer(self):
+        return np.array([(self.velocity()/1000 - 0.5)*2])
+
     @property
     def state(self):
         return self.simthread.data
-    
-    @property
-    def speed(self):
-        return self.state.display_speed
 
-    @property
-    def velocity(self):
-        # Conversion from m/s to km/h
-        velocity_norm = np.linalg.norm(self.state.velocity)*3.6 
-        return velocity_norm
-    
     @property
     def position(self):
         return self.state.position
@@ -161,12 +191,4 @@ class TrackmaniaEnv(Env):
     def race_time(self):
         return self.state.race_time
 
-    @property
-    def speedometer(self):
-        return np.array([(self.velocity/1000 - 0.5)*2])
-
-    @property
-    def reward(self):
-        reward = self.velocity/100
-        return reward
 

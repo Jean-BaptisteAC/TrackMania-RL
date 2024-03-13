@@ -13,14 +13,16 @@ def return_model(algorithm):
         return SAC
     
 class TestBed:
-    def __init__(self, algorithm, model_name, parameters_dict, save_interval, **kwargs):
+    def __init__(self, algorithm, policy, model_name, parameters_dict, save_interval, **kwargs):
         self.algorithm = algorithm
+        self.policy = policy
         self.model_name = model_name
         self.save_interval = save_interval
         self.parameters_dict = parameters_dict
         self.total_timestep = 0
         
         SB3_arguments = {}
+
         if "policy_kwargs" in kwargs:
             SB3_arguments["policy_kwargs"] = kwargs["policy_kwargs"]
         if "learning_rate" in kwargs:
@@ -37,11 +39,11 @@ class TestBed:
         if not os.path.exists(self.logdir):
             os.makedirs(self.logdir)
         
-        self.model = return_model(algorithm)("MlpPolicy",
-                                                 self.env,
-                                                 verbose=1,
-                                                 tensorboard_log=self.logdir,
-                                                 **SB3_arguments)
+        self.model = return_model(algorithm)(self.policy,
+                                             self.env,
+                                             verbose=0,
+                                             tensorboard_log=self.logdir,
+                                             **SB3_arguments)
         
         self.models_dir = "models/" + self.algorithm + "/" + self.model_name
         if not os.path.exists(self.models_dir):

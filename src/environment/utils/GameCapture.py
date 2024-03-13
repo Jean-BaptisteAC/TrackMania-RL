@@ -46,16 +46,6 @@ class Lidar_Vision():
         frame = cv2.threshold(frame[:, :, 0], 130, 255, cv2.THRESH_BINARY)[1]
         
         self.frame = frame
-        
-    
-    def exists(self, hwnd):
-        try:
-            dc = wind32.GetWindowDC(hwnd)
-        except:
-            return False
-        else:
-            wind32.DeleteObject(dc)
-            return True
 
     def get_rays(self):
     
@@ -109,6 +99,8 @@ class Lidar_Vision():
             self.is_running = False
             
     def get_obs(self):
+        self.get_frame()
+        self.get_rays()
         distances = []
         for ray in self.rays:
             distances.append(distance.euclidean(
@@ -117,3 +109,61 @@ class Lidar_Vision():
         min_distance = min(distances)
         distances = (distances - 0.5)*2
         return np.array(distances), min_distance
+    
+    
+
+class Image_Vision():
+    def __init__(self):
+        self.hwnd = wind32.FindWindow(None, os.getenv('GAME_WINDOW_NAME'))
+
+        # Crop the screenshot to remove unecessary information and reduce dimensionality
+        self.lateral_margin = 10 + 99
+        self.upper_margin = 40 + 140
+        self.lower_margin = 10 + 125
+
+        self.dimension_reduction = 4
+            
+        self.get_frame()
+        self.is_running = True
+
+    def get_frame(self):
+        
+        left, top, right, bottom = wind32.GetWindowRect(self.hwnd)
+
+        left = left + self.lateral_margin
+        right = right - self.lateral_margin
+        top = top + self.upper_margin
+        bottom = bottom - self.lower_margin
+
+        bounding_box = left, top, right, bottom
+        with mss() as sct:
+            frame = np.array(sct.grab(bounding_box)) 
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        dim = (int(frame.shape[1]/self.dimension_reduction),
+               int(frame.shape[0]/self.dimension_reduction))
+        frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
+        self.frame = frame
+
+    # No restart when touching the boarders
+    def touch_boarder(self):
+        return False
+    
+    def show(self):
+        frame = self.frame
+        
+        dim = (int(frame.shape[1]*self.dimension_reduction),
+               int(frame.shape[0]*self.dimension_reduction))
+        cv2.imshow("frame", cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST))
+        
+        if (cv2.waitKey(1) & 0xFF) == ord("p"):
+            cv2.destroyAllWindows()
+            self.is_running = False
+            
+    def get_obs(self):
+        self.get_frame()
+        # No distance reward included
+        min_distance = 0
+        # Image in shape (H, W, 1) pixels value in [0, 255] because SB3 automatically scales the features for images
+        observation = np.reshape(np.array(self.frame), 
+                                 (self.frame.shape[0],self.frame.shape[1] , 1))
+        return observation, min_distance
