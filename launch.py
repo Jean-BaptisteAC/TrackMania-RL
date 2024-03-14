@@ -7,11 +7,10 @@ T = TypeVar("T")
 
 if __name__ == "__main__":
     env =  TrackmaniaEnv(action_space="controller", observation_space="image")
-    check_env(env)
 
-
+    env.reset()
     while True:
-    
+        
         mu, sigma = 0.2, 0.3 # mean and standard deviation
         gas = 1
         steer = np.random.normal(0, 0)

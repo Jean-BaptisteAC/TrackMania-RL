@@ -13,12 +13,13 @@ def return_model(algorithm):
         return SAC
     
 class TestBed:
-    def __init__(self, algorithm, policy, model_name, parameters_dict, save_interval, **kwargs):
+    def __init__(self, algorithm, policy, model_name, parameters_dict, save_interval, enable_log=True, **kwargs):
         self.algorithm = algorithm
         self.policy = policy
         self.model_name = model_name
-        self.save_interval = save_interval
         self.parameters_dict = parameters_dict
+        self.save_interval = save_interval
+        self.enable_log = enable_log
         self.total_timestep = 0
         
         SB3_arguments = {}
@@ -62,9 +63,15 @@ class TestBed:
         self.total_timestep += time_steps
         
         while self.step < self.total_timestep:
-            self.model.learn(total_timesteps=self.save_interval, 
-                             reset_num_timesteps=False, 
-                             tb_log_name=self.model_name)
+
+            if self.enable_log:
+                self.model.learn(total_timesteps=self.save_interval, 
+                                reset_num_timesteps=False, 
+                                tb_log_name=self.model_name)
+            else:
+                self.model.learn(total_timesteps=self.save_interval, 
+                                reset_num_timesteps=False)
+
             self.step += self.save_interval
 
             model_step = str(int(self.step/1000)) + "k"
