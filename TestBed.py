@@ -41,7 +41,8 @@ class TestBed:
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
-                                             verbose=0,
+                                             verbose=1,
+                                             n_steps=4096,
                                              tensorboard_log=self.logdir,
                                              **SB3_arguments)
         
@@ -68,5 +69,3 @@ class TestBed:
 
             model_step = str(int(self.step/1000)) + "k"
             self.model.save(f"{self.models_dir}/{model_step}")
-
-
