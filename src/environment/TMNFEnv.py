@@ -2,12 +2,14 @@ from typing import TypeVar
 import time
 import numpy as np
 from gymnasium import Env
-from gymnasium.spaces import Box, MultiBinary
+from gymnasium.spaces import Box, MultiBinary, Dict
 
 from .TMIClient import ThreadedClient
 from .utils.GameCapture import Lidar_Vision, Image_Vision
 from .utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
 from .utils.GameLaunch import GameLauncher
+
+import torch
  
 ArrowsActionSpace = MultiBinary(4,)
 ControllerActionSpace = Box(
@@ -46,9 +48,12 @@ class TrackmaniaEnv(Env):
 
         elif observation_space == "image":
             self.observation_type = "image"
-            self.observation_space = Box(
-                low=0, high=255, shape=(53, 110, 1), dtype=np.uint8
+
+            self.observation_space = Dict(
+                {"image": Box(low=0, high=255, shape=(53, 110, 1), dtype=np.uint8), 
+                 "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
+                
             self.viewer = Image_Vision()
 
         game_launcher  = GameLauncher()
@@ -116,8 +121,9 @@ class TrackmaniaEnv(Env):
             observation = np.concatenate([screen_observation, velocity])
 
         elif self.observation_type == "image":
-            observation = screen_observation
-
+            observation = {"image":screen_observation, 
+                           "physics": torch.tensor(np.array([self.speedometer()]), dtype=torch.float64)
+            }
         return observation 
         
     def reset(self, seed=0):
