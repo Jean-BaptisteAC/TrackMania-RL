@@ -87,4 +87,6 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs, 
                       seed=seed)
     
-    testbed.train(200_000)
+    # testbed.train(200_000)
+
+    print(testbed.model.policy)
