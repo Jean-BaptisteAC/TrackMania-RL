@@ -15,6 +15,8 @@ class CNN_Extractor(BaseFeaturesExtractor):
     """
     :param observation_space: (gym.Space)
     :param features_dim: (int) Number of features extracted.
+
+    
         This corresponds to the number of unit for the last layer.
     """
 
@@ -27,6 +29,18 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.Conv2d(32, 16, kernel_size=4, stride=2, padding=0),
             nn.ReLU(),
             nn.Flatten()
+        )
+
+        self.linesight_cnn = nn.Sequential(
+            nn.Conv2d(in_channels=n_input_channels, out_channels=16, kernel_size=(4, 4), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(4, 4), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), stride=1),
+            nn.LeakyReLU(inplace=True),
+            nn.Flatten(),
         )
 
         # Compute shape by doing one forward pass
@@ -42,7 +56,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
             )
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
-        image_embedding = self.cnn_head(self.cnn(observation["image"]))
+        image_embedding = self.cnn_head(self.linesight_cnn(observation["image"]))
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
 
@@ -123,15 +137,26 @@ class CustomActorCriticPolicy(ActorCriticPolicy):
 
 
 if __name__ == "__main__":
-    
-    env = TrackmaniaEnv(action_space="controller", observation_space="image")
 
+    """ TRAIN AGENT """
+
+    algorithm = "PPO"
+    model_name = "PPO_Second_CNN_speed_x2"
+    parameters_dict = {"action_space":"controller", "observation_space":"image"}
+    save_interval = 10_000
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
         features_extractor_kwargs=dict(features_dim=64),
     )   
-    agent = PPO(CustomActorCriticPolicy, env, policy_kwargs=policy_kwargs)
-    print(agent.policy)
+    seed=0
 
-    agent.learn(10_000)
-
+    testbed = TestBed(algorithm=algorithm,
+                      policy=CustomActorCriticPolicy,
+                      model_name=model_name, 
+                      parameters_dict=parameters_dict, 
+                      save_interval=save_interval,
+                      enable_log = True,
+                      policy_kwargs=policy_kwargs, 
+                      seed=seed)
+    
+    testbed.train(200_000)
