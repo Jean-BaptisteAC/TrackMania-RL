@@ -3,6 +3,7 @@ import numpy as np
 import win32.win32gui as wind32
 from mss import mss
 from scipy.spatial import distance
+from sklearn.metrics import mean_absolute_error
 
 import os
 import sys
@@ -154,16 +155,49 @@ class Image_Vision():
         dim = (int(frame.shape[1]*self.dimension_reduction),
                int(frame.shape[0]*self.dimension_reduction))
         cv2.imshow("frame", cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST))
+
+        
+        # left_right_dim = (int(self.left.shape[1]*self.dimension_reduction),
+        #        int(self.left.shape[0]*self.dimension_reduction))
+
+        # cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
+        # cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
         
         if (cv2.waitKey(1) & 0xFF) == ord("p"):
             cv2.destroyAllWindows()
             self.is_running = False
+
+        
             
     def get_obs(self):
         self.get_frame()
-        # No distance reward included
-        min_distance = 0.27
         # Image in shape (H, W, 1) pixels value in [0, 255] because SB3 automatically scales the features for images
         observation = np.reshape(np.array(self.frame), 
                                  (self.frame.shape[0],self.frame.shape[1] , 1))
-        return observation, min_distance
+        
+        asymmetry = self.get_asymmetry()
+        return observation, asymmetry
+    
+    def get_asymmetry(self):
+        H, W = self.frame.shape[0], self.frame.shape[1]
+
+        horizon = 15
+        bottom = 10
+
+        self.left = self.frame[horizon:H-bottom, 1:W//2]
+        self.right = self.frame[horizon:H-bottom, W:W//2:-1]
+        # self.right = self.frame[horizon:H-bottom, W//2::-1]
+
+        flat_left = np.reshape(self.left, -1)/255
+        flat_right = np.reshape(self.right, -1)/255
+
+        error = mean_absolute_error(flat_left, flat_right)
+
+        x = 10*(error/0.35 - 0.5)
+        offset = 4
+        x = x - offset
+
+        asymmetry = 1/(1 + np.exp(-x)) 
+
+        return asymmetry
+

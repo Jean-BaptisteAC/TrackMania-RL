@@ -22,6 +22,6 @@ if __name__ == "__main__":
         except:
             pass
 
-    action = np.array([0, 0, 0, 0])
+    action = np.array([0, 0])
     env.step(action)
     env.close()

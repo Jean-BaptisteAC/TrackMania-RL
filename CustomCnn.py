@@ -141,7 +141,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CNN+lateral_penalty"
+    model_name = "PPO_CNN+lateral+Soft_speed+Asymmetry"
     parameters_dict = {"action_space":"controller", "observation_space":"image"}
     save_interval = 10_000
     policy_kwargs = dict(

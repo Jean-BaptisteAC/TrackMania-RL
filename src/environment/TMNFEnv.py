@@ -64,7 +64,6 @@ class TrackmaniaEnv(Env):
             time.sleep(4)
         
         self.simthread = ThreadedClient()
-        self.total_reward = 0.0
         self.current_race_time = 0
         self.max_race_time = 25_000
         self.first_init = True
@@ -78,7 +77,7 @@ class TrackmaniaEnv(Env):
         self._continuous_action_to_command(action)
         
         velocity_reward, done = self.check_state()
-        screen_observation, min_distance = self.viewer.get_obs()
+        screen_observation, distance_observation = self.viewer.get_obs()
         self.viewer.show()
 
         observation = self.observation(screen_observation)
@@ -86,23 +85,27 @@ class TrackmaniaEnv(Env):
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             velocity_reward = 0.5*velocity_reward
-        self.total_reward += reward
 
-        distance_reward = abs(1 - min_distance/0.27)
-        alpha = 0.5
+        if self.observation_type == "lidar":
+            distance_reward = abs(1 - distance_observation/0.27)
+            alpha = 0.5
+            reward = velocity_reward - alpha * distance_reward ** 2
 
-        reward = velocity_reward - alpha * distance_reward ** 2
+        elif self.observation_type == "image":
+            distance_reward = distance_observation
+            alpha = 0.5
+            reward = velocity_reward - alpha * distance_reward
         
-
         truncated = False
         info = {}
-
 
         return observation, reward, done, truncated, info
 
     def check_state(self):
         done = False
-        reward = self.velocity()/100
+
+        # Soft Setting the speed to 100 km/h
+        reward = 1 - abs(1 - self.velocity()/100)
 
         if self.position[0] < 41.0:
             done = True
@@ -133,7 +136,6 @@ class TrackmaniaEnv(Env):
         return observation 
         
     def reset(self, seed=0):
-        self.total_reward = 0.0
         if self.first_init:
             self.current_race_time = 0
             self.first_init = False
