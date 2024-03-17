@@ -66,7 +66,7 @@ class TrackmaniaEnv(Env):
         self.simthread = ThreadedClient()
         self.total_reward = 0.0
         self.current_race_time = 0
-        self.max_race_time = 20_000
+        self.max_race_time = 25_000
         self.first_init = True
         self.i_step = 0
 

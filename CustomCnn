@@ -155,7 +155,6 @@ if __name__ == "__main__":
                       model_name=model_name, 
                       parameters_dict=parameters_dict, 
                       save_interval=save_interval,
-                      enable_log = True,
                       policy_kwargs=policy_kwargs, 
                       seed=seed)
     

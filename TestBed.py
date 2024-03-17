@@ -1,6 +1,6 @@
 
 from src.environment.TMNFEnv import TrackmaniaEnv
-from stable_baselines3 import PPO, SAC
+from stable_baselines3 import PPO, SAC, TD3
 from tqdm.auto import tqdm
 import torch as th
 import numpy as np
@@ -11,15 +11,16 @@ def return_model(algorithm):
         return PPO
     if algorithm == "SAC":
         return SAC
+    if algorithm == "TD3":
+        return TD3
     
 class TestBed:
-    def __init__(self, algorithm, policy, model_name, parameters_dict, save_interval, enable_log=True, **kwargs):
+    def __init__(self, algorithm, policy, model_name, parameters_dict, save_interval, **kwargs):
         self.algorithm = algorithm
         self.policy = policy
         self.model_name = model_name
         self.parameters_dict = parameters_dict
         self.save_interval = save_interval
-        self.enable_log = enable_log
         self.total_timestep = 0
         
         SB3_arguments = {}
@@ -43,7 +44,6 @@ class TestBed:
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
                                              verbose=1,
-                                             n_steps=4096,
                                              tensorboard_log=self.logdir,
                                              **SB3_arguments)
         
@@ -64,13 +64,9 @@ class TestBed:
         
         while self.step < self.total_timestep:
 
-            if self.enable_log:
-                self.model.learn(total_timesteps=self.save_interval, 
-                                reset_num_timesteps=False, 
-                                tb_log_name=self.model_name)
-            else:
-                self.model.learn(total_timesteps=self.save_interval, 
-                                reset_num_timesteps=False)
+            self.model.learn(total_timesteps=self.save_interval, 
+                            reset_num_timesteps=False, 
+                            tb_log_name=self.model_name)
 
             self.step += self.save_interval
 
