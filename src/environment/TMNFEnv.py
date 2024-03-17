@@ -82,16 +82,17 @@ class TrackmaniaEnv(Env):
         self.viewer.show()
 
         observation = self.observation(screen_observation)
-        
+
+        contact = self.state.scene_mobil.has_any_lateral_contact
+        if contact:
+            velocity_reward = 0.5*velocity_reward
+        self.total_reward += reward
+
         distance_reward = abs(1 - min_distance/0.27)
         alpha = 0.5
 
         reward = velocity_reward - alpha * distance_reward ** 2
-        contact = self.state.scene_mobil.has_any_lateral_contact
-
-        if contact:
-            reward = reward - 1.5
-        self.total_reward += reward
+        
 
         truncated = False
         info = {}
