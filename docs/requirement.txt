@@ -12,3 +12,4 @@ opencv-python
 pywin32
 keyboard
 tensorboard
+scikit-learn
