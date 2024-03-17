@@ -140,8 +140,8 @@ if __name__ == "__main__":
 
     """ TRAIN AGENT """
 
-    algorithm = "TD3"
-    model_name = "TD3_CNN+lateral_penalty"
+    algorithm = "PPO"
+    model_name = "PPO_CNN+lateral_penalty"
     parameters_dict = {"action_space":"controller", "observation_space":"image"}
     save_interval = 10_000
     policy_kwargs = dict(
