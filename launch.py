@@ -11,10 +11,7 @@ if __name__ == "__main__":
     env.reset()
     while True:
         
-        mu, sigma = 0.2, 0.3 # mean and standard deviation
-        gas = 1
-        steer = np.random.normal(0, 0)
-        action = np.clip([gas, steer], -1.0, 1.0)
+        action = np.array([0, 0])
 
         new_observation, reward, done, truncated, info = env.step(action)
 

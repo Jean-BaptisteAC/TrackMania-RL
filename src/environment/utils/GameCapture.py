@@ -162,7 +162,7 @@ class Image_Vision():
     def get_obs(self):
         self.get_frame()
         # No distance reward included
-        min_distance = 0
+        min_distance = 0.27
         # Image in shape (H, W, 1) pixels value in [0, 255] because SB3 automatically scales the features for images
         observation = np.reshape(np.array(self.frame), 
                                  (self.frame.shape[0],self.frame.shape[1] , 1))
