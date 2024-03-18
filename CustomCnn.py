@@ -23,13 +23,6 @@ class CNN_Extractor(BaseFeaturesExtractor):
     def __init__(self, observation_space: spaces.Dict, features_dim: int = 64):
         super().__init__(observation_space, features_dim)
         n_input_channels = observation_space["image"].shape[0]
-        self.cnn = nn.Sequential(
-            nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(32, 16, kernel_size=4, stride=2, padding=0),
-            nn.ReLU(),
-            nn.Flatten()
-        )
 
         self.linesight_cnn = nn.Sequential(
             nn.Conv2d(in_channels=n_input_channels, out_channels=16, kernel_size=(4, 4), stride=2),
@@ -45,7 +38,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
 
         # Compute shape by doing one forward pass
         with th.no_grad():
-            n_flatten = self.cnn(
+            n_flatten = self.linesight_cnn(
                 th.as_tensor(observation_space["image"].sample()[None]).float()
             ).shape[1]
 
@@ -141,7 +134,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CNN+lateral+Soft_speed+Asymmetry"
+    model_name = "PPO_CNN+test_time"
     parameters_dict = {"action_space":"controller", "observation_space":"image"}
     save_interval = 10_000
     policy_kwargs = dict(
@@ -159,3 +152,4 @@ if __name__ == "__main__":
                       seed=seed)
     
     testbed.train(200_000)
+

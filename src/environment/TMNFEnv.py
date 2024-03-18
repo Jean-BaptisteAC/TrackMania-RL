@@ -50,7 +50,7 @@ class TrackmaniaEnv(Env):
             self.observation_type = "image"
 
             self.observation_space = Dict(
-                {"image": Box(low=0, high=255, shape=(53, 110, 1), dtype=np.uint8), 
+                {"image": Box(low=0, high=255, shape=(56, 158, 1), dtype=np.uint8), 
                  "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
                 
@@ -84,17 +84,19 @@ class TrackmaniaEnv(Env):
 
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
-            velocity_reward = 0.5*velocity_reward
+            wall_penalty = 1.0
+        else: 
+            wall_penalty = 0.0
 
         if self.observation_type == "lidar":
             distance_reward = abs(1 - distance_observation/0.27)
             alpha = 0.5
-            reward = velocity_reward - alpha * distance_reward ** 2
+            reward = velocity_reward - (alpha * distance_reward ** 2) - wall_penalty
 
         elif self.observation_type == "image":
             distance_reward = distance_observation
             alpha = 0.5
-            reward = velocity_reward - alpha * distance_reward
+            reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
         truncated = False
         info = {}
@@ -104,19 +106,28 @@ class TrackmaniaEnv(Env):
     def check_state(self):
         done = False
 
-        # Soft Setting the speed to 100 km/h
-        reward = 1 - abs(1 - self.velocity()/100)
+        reward = self.velocity()/100
 
-        if self.position[0] < 41.0:
+        # Check for exit of the track
+        if self.position[1] < 9.2:
             done = True
             reward = -20
             self.reset()
 
+        # Check for complete stop of the car
+        elif (self.race_time - self.current_race_time) >= 1_000:
+            if self.velocity() < 1:
+                done = True
+                reward = -20
+                self.reset()
+
+        # Check for contact with barriers in lidar mode
         elif self.viewer.touch_boarder():
             done = True
             reward = -20
             self.reset()
             
+        # Time out when max episode duration is reached
         elif (self.race_time - self.current_race_time) >= self.max_race_time :
             done = True
             self.reset()

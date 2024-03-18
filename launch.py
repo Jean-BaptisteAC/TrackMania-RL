@@ -11,9 +11,13 @@ if __name__ == "__main__":
     env.reset()
     while True:
         
+        gas = 0.5
+        steering = np.clip(np.random.normal(), -1, 1)
+        # action = np.array([gas, steering])
+
         action = np.array([0, 0])
 
-        new_observation, reward, done, truncated, info = env.step(action)
+        new_observation, reward, done, truncated, info = env.step(action)   
 
         try:
             if keyboard.is_pressed("p"):

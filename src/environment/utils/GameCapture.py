@@ -118,9 +118,9 @@ class Image_Vision():
         self.hwnd = wind32.FindWindow(None, os.getenv('GAME_WINDOW_NAME'))
 
         # Crop the screenshot to remove unecessary information and reduce dimensionality
-        self.lateral_margin = 10 + 99
-        self.upper_margin = 40 + 140
-        self.lower_margin = 10 + 125
+        self.lateral_margin = 10 + 2
+        self.upper_margin = 40 + 180
+        self.lower_margin = 10 + 70
 
         self.dimension_reduction = 4
             
@@ -149,6 +149,7 @@ class Image_Vision():
     def touch_boarder(self):
         return False
     
+
     def show(self):
         frame = self.frame
         
@@ -158,7 +159,7 @@ class Image_Vision():
 
         
         # left_right_dim = (int(self.left.shape[1]*self.dimension_reduction),
-        #        int(self.left.shape[0]*self.dimension_reduction))
+        #                   int(self.left.shape[0]*self.dimension_reduction))
 
         # cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
         # cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
@@ -179,14 +180,17 @@ class Image_Vision():
         return observation, asymmetry
     
     def get_asymmetry(self):
+        
         H, W = self.frame.shape[0], self.frame.shape[1]
 
-        horizon = 15
-        bottom = 10
+
+        horizon = 10
+        bottom = 20
 
         self.left = self.frame[horizon:H-bottom, 1:W//2]
         self.right = self.frame[horizon:H-bottom, W:W//2:-1]
         # self.right = self.frame[horizon:H-bottom, W//2::-1]
+
 
         flat_left = np.reshape(self.left, -1)/255
         flat_right = np.reshape(self.right, -1)/255

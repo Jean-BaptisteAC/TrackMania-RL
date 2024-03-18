@@ -16,6 +16,8 @@ class SimStateClient(Client):
         super().__init__()
         self.sim_state = None
         self.action = None
+        self.timer = time.time()
+        
 
     def on_run_step(self, iface, _time: int):
         self.sim_state = iface.get_simulation_state()
@@ -25,8 +27,14 @@ class SimStateClient(Client):
             "gas":            int(np.clip(-self.action[0]*65536, -65536, 65536)),   
             }
         
+        if time.time() - self.timer > 1.0:
+            current_action = {
+                'sim_clear_buffer': True,
+                "steer":          0,  
+                "gas":            0,   
+                }
+        
         iface.set_input_state(**current_action)
-
 
 
 class ThreadedClient:
@@ -49,6 +57,7 @@ class ThreadedClient:
         while self.iface.running:
             time.sleep(0)
             self._lock.acquire()
+            client.timer = time.time()
             client.action = self.action
             self.data = client.sim_state
             self._lock.release()
