@@ -18,6 +18,8 @@ class SimStateClient(Client):
         self.action = None
         self.restart = False
         self.is_init = False
+        self.passed_checkpoint = False
+        self.time = None
         
 
     def on_run_step(self, iface, _time: int):
@@ -47,6 +49,14 @@ class SimStateClient(Client):
             # iface.execute_command("warp 0000")
             
             self.restart = False
+
+    def on_checkpoint_count_changed(self, iface, current: int, target: int):
+        
+        race_time = iface.get_simulation_state().race_time
+        print(race_time)
+        self.time = race_time
+        self.passed_checkpoint = True
+
 
     def respawn(self):
         self.restart = True 

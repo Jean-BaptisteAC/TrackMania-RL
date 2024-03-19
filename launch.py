@@ -19,6 +19,9 @@ if __name__ == "__main__":
 
         new_observation, reward, done, truncated, info = env.step(action)   
 
+        if info != {}:
+            print(info)
+
         try:
             if keyboard.is_pressed("p"):
                 print("Interrupt")

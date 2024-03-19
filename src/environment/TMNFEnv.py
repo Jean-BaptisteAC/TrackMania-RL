@@ -71,7 +71,8 @@ class TrackmaniaEnv(Env):
 
         self._continuous_action_to_command(action)
         
-        velocity_reward, done = self.check_state()
+        
+        velocity_reward, done, info  = self.check_state()
         screen_observation, distance_observation = self.viewer.get_obs()
         self.viewer.show()
 
@@ -94,13 +95,13 @@ class TrackmaniaEnv(Env):
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
         truncated = False
-        info = {}
 
         return observation, reward, done, truncated, info
 
     def check_state(self):
         done = False
 
+        info = {}
         reward = self.velocity()/100
 
         # Check for exit of the track
@@ -116,6 +117,15 @@ class TrackmaniaEnv(Env):
                 reward = -20
                 self.reset()
 
+        # Check for finishing in the checkpoint
+        elif self.simthread.client.passed_checkpoint:
+            done = True
+            reward = 0
+            info = {"checkpoint_time":self.simthread.client.time}
+            self.reset()
+            self.simthread.client.passed_checkpoint = False
+            
+
         # Check for contact with barriers in lidar mode
         elif self.viewer.touch_boarder():
             done = True
@@ -127,7 +137,7 @@ class TrackmaniaEnv(Env):
             done = True
             self.reset()
         
-        return reward, done
+        return reward, done, info
     
 
     def observation(self, screen_observation):
