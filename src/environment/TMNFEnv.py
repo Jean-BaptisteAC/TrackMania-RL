@@ -6,7 +6,6 @@ from gymnasium.spaces import Box, MultiBinary, Dict
 
 from .TMIClient import ThreadedClient
 from .utils.GameCapture import Lidar_Vision, Image_Vision
-from .utils.GameInteraction import ArrowInput, KeyboardInputManager, GamepadInputManager
 from .utils.GameLaunch import GameLauncher
 
 import torch
@@ -32,12 +31,8 @@ class TrackmaniaEnv(Env):
     ):
         if action_space == "arrows":
             self.action_space = ArrowsActionSpace
-            self.input_manager = KeyboardInputManager()
         elif action_space == "controller":
             self.action_space = ControllerActionSpace
-            # self.input_manager = GamepadInputManager()
-
-        self.special_input_manager = KeyboardInputManager()
 
         if observation_space == "lidar":
             self.observation_type = "lidar"
@@ -152,7 +147,7 @@ class TrackmaniaEnv(Env):
             self.first_init = False
         else:
             self.current_race_time = self.race_time
-        self._restart_race()
+        self._restart_race_command()
         
         screen_observation, _ = self.viewer.get_obs()
         observation = self.observation(screen_observation)
@@ -168,15 +163,9 @@ class TrackmaniaEnv(Env):
 
     def _continuous_action_to_command(self, action):
         self.simthread.action = action
-        
-    def _discrete_action_to_command(self, action):
-        commands = ArrowInput.from_discrete_agent_out(action)
-        self.input_manager.play_inputs_no_release(commands)
 
-    def _restart_race(self):
-        self.special_input_manager.press_key(ArrowInput.RETURN)
-        time.sleep(0)
-        self.special_input_manager.release_key(ArrowInput.RETURN)
+    def _restart_race_command(self):
+        self.simthread.client.respawn()
 
     # Computation of the direction vector of the car
     def vehicle_normal_vector(self):
@@ -215,5 +204,3 @@ class TrackmaniaEnv(Env):
     @property
     def race_time(self):
         return self.state.race_time
-
-

@@ -15,7 +15,7 @@ if __name__ == "__main__":
         steering = np.clip(np.random.normal(), -1, 1)
         # action = np.array([gas, steering])
 
-        action = np.array([0, 0])
+        action = np.array([1, 0])
 
         new_observation, reward, done, truncated, info = env.step(action)   
 
