@@ -31,7 +31,12 @@ class SimStateClient(Client):
         iface.set_input_state(**current_action)
         
         if self.restart:
-            iface.respawn()
+
+            # iface.respawn()
+            time.sleep(0)
+            iface.execute_command("load_state")
+            # iface.execute_command("warp 0000")
+            
             self.restart = False
 
     def respawn(self):
