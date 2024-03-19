@@ -16,11 +16,20 @@ class SimStateClient(Client):
         super().__init__()
         self.sim_state = None
         self.action = None
-        self.timer = time.time()
         self.restart = False
+        self.is_init = False
         
 
     def on_run_step(self, iface, _time: int):
+
+        if self.is_init is False:
+            iface.respawn()
+            iface.execute_command("warp 0")
+            iface.execute_command("save_state")
+            iface.execute_command("load_state")
+            self.is_init = True
+
+
         self.sim_state = iface.get_simulation_state()
         current_action = {
             'sim_clear_buffer': True,
