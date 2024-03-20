@@ -51,9 +51,14 @@ class CustomClient(Client):
         self.sim_state = iface.get_simulation_state()
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
+
+        
         if current >= 1:
             self.time = self.sim_state.race_time
             self.passed_checkpoint = True
+
+            if current == target:
+                iface.prevent_simulation_finish()
 
     def respawn(self):
         self.is_respawn = True 
