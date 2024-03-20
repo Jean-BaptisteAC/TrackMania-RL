@@ -14,9 +14,9 @@ if __name__ == "__main__":
         gas = np.random.normal() + 0.5
         steering = np.random.normal()
         action = np.array([gas, steering])
-        action = [1, 0.1*steering]
+        action = [0, 0.1*steering]
 
-        new_observation, reward, done, truncated, info = env.step(action)   
+        new_observation, reward, done, truncated, info = env.step(action)
 
         if info["checkpoint_time"] is not False:
             print(info["checkpoint_time"])
@@ -27,6 +27,7 @@ if __name__ == "__main__":
                 break
         except:
             pass
+
 
     action = np.array([0, 0])
     env.step(action)

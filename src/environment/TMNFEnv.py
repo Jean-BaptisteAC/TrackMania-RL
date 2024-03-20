@@ -49,25 +49,15 @@ class TrackmaniaEnv(Env):
                 
             self.viewer = Image_Vision()
 
-        game_launcher  = GameLauncher()
-        if not game_launcher.game_started:
-            game_launcher.start_game()
-            print("game started")
-            input("press enter when game is ready")
-            time.sleep(4)
-        
-
         self.interface = TMInterface()
         self.client = CustomClient()
         self.interface.set_timeout(10_000)
         self.interface.register(self.client)
 
-
         while not self.interface.registered:
             time.sleep(0.1)
 
-        self.current_race_time = 0
-        self.max_race_time = 25_000
+        self.max_race_time = 2000
         self.first_init = True
         self.i_step = 0
 
@@ -78,14 +68,13 @@ class TrackmaniaEnv(Env):
 
         self.client.action = action
         
-        
         velocity_reward, done, info  = self.check_state()
         screen_observation, distance_observation = self.viewer.get_obs()
         self.viewer.show()
 
         observation = self.observation(screen_observation)
 
-        contact = self.state().scene_mobil.has_any_lateral_contact
+        contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             wall_penalty = 1.0
         else: 
@@ -118,14 +107,14 @@ class TrackmaniaEnv(Env):
             self.reset()
 
         # Check for complete stop of the car
-        elif (self.race_time - self.current_race_time) >= 1_000:
+        if self.race_time >= 1_000:
             if self.velocity() < 1:
                 done = True
                 reward = -20
                 self.reset()
 
         # Check for finishing in the checkpoint
-        elif self.client.passed_checkpoint:
+        if self.client.passed_checkpoint:
             done = True
             reward = 0
             info = {"checkpoint_time":self.client.time}
@@ -134,13 +123,13 @@ class TrackmaniaEnv(Env):
             
 
         # Check for contact with barriers in lidar mode
-        elif self.viewer.touch_boarder():
+        if self.viewer.touch_boarder():
             done = True
             reward = -20
             self.reset()
             
         # Time out when max episode duration is reached
-        elif (self.race_time - self.current_race_time) >= self.max_race_time :
+        if self.race_time >= self.max_race_time :
             done = True
             self.reset()
         
@@ -159,11 +148,6 @@ class TrackmaniaEnv(Env):
         return observation 
         
     def reset(self, seed=0):
-        if self.first_init:
-            self.current_race_time = 0
-            self.first_init = False
-        else:
-            self.current_race_time = self.race_time
         self.client.respawn()
         
         screen_observation, _ = self.viewer.get_obs()
@@ -172,9 +156,11 @@ class TrackmaniaEnv(Env):
         
         return observation, info
 
-    # Computation of the direction vector of the car
+    
     def vehicle_normal_vector(self):
-        yaw_pitch_roll = self.state().yaw_pitch_roll
+        """ Computation of the direction vector of the car """
+
+        yaw_pitch_roll = self.state.yaw_pitch_roll
 
         # Track mania X, Y, Z is not the usual system: Y corresponds to the altitude.
         # We do not take into account the roll as it has no impact on the direction of the car
@@ -189,7 +175,7 @@ class TrackmaniaEnv(Env):
         
         # Projection of the speed vector on the direction vector of the car
         velocity_oriented = np.dot(self.vehicle_normal_vector(), 
-                                 self.state().velocity)
+                                 self.state.velocity)
         
         # Conversion from m/s to km/h
         velocity_oriented = velocity_oriented*3.6 
@@ -198,14 +184,14 @@ class TrackmaniaEnv(Env):
     def speedometer(self):
         return np.array([(self.velocity()/1000 - 0.5)*2])
 
+    @property
     def state(self):
         return self.client.sim_state
-    
 
     @property
     def position(self):
-        return self.state().position
+        return self.state.position
 
     @property
     def race_time(self):
-        return self.state().race_time
+        return self.state.race_time

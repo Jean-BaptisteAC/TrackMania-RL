@@ -10,7 +10,6 @@ import keyboard
 class CustomClient(Client):
     """
     Client for a TMInterface instance.
-    Its only job is to get the simulation state that is used by the gym env for reward computation.
     """
 
     def __init__(self):
@@ -27,17 +26,15 @@ class CustomClient(Client):
     def on_registered(self, iface: TMInterface) -> None:
         print(f'Registered to {iface.server_name}')
 
-    def init_sim_state(self, iface):
-        self.sim_state = iface.get_simulation_state()
-
     def on_run_step(self, iface, _time: int):
+
+        if _time == 0:
+            self.init_state = iface.get_simulation_state()
 
         if not self.is_init:
             iface.respawn()
             self.is_init = True
-
-        if _time == 0:
-            self.init_state = iface.get_simulation_state()
+            self.time = None
 
         elif self.is_respawn and self.init_state:
             iface.rewind_to_state(self.init_state)
@@ -53,17 +50,16 @@ class CustomClient(Client):
 
         self.sim_state = iface.get_simulation_state()
         
-
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
         if current >= 1:
-            self.is_respawn = True
-
+            self.time = self.sim_state.race_time
+            self.passed_checkpoint = True
 
     def respawn(self):
         self.is_respawn = True 
+        self.passed_checkpoint = False
 
     
-
 
 if __name__ == "__main__":
     
