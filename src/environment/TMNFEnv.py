@@ -115,7 +115,7 @@ class TrackmaniaEnv(Env):
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:
             done = True
-            reward = 0
+            reward = 100
             info = {"checkpoint_time":self.client.time}
             self.reset()
             self.client.passed_checkpoint = False
