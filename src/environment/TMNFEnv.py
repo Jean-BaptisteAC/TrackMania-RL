@@ -28,25 +28,29 @@ class TrackmaniaEnv(Env):
     def __init__(
         self,
         observation_space: str = "image",
+        dimension_reduction: int = 4
     ):
         self.action_space = ControllerActionSpace
 
         if observation_space == "lidar":
             self.observation_type = "lidar"
+            self.viewer = Lidar_Vision()
             self.observation_space = Box(
                 low=-1.0, high=1.0, shape=(16,), dtype=np.float64
             )
-            self.viewer = Lidar_Vision()
+            
 
         elif observation_space == "image":
             self.observation_type = "image"
-
+            self.viewer = Image_Vision(dimension_reduction=dimension_reduction)
+            obs, _ = self.viewer.get_obs()
+            image_shape = obs.shape
             self.observation_space = Dict(
-                {"image": Box(low=0, high=255, shape=(56, 158, 1), dtype=np.uint8), 
+                {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
                  "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
                 
-            self.viewer = Image_Vision()
+            
 
         self.interface = TMInterface()
         self.client = CustomClient()
@@ -69,7 +73,7 @@ class TrackmaniaEnv(Env):
         
         velocity_reward, done, info  = self.check_state()
         screen_observation, distance_observation = self.viewer.get_obs()
-        self.viewer.show()
+        # self.viewer.show()
 
         observation = self.observation(screen_observation)
 

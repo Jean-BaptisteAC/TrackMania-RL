@@ -6,7 +6,7 @@ import keyboard
 T = TypeVar("T")
 
 if __name__ == "__main__":
-    env =  TrackmaniaEnv(observation_space="image")
+    env =  TrackmaniaEnv(observation_space="image", dimension_reduction=8)
 
     env.reset()
     while True:
