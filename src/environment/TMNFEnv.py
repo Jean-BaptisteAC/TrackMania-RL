@@ -6,7 +6,6 @@ from gymnasium.spaces import Box, MultiBinary, Dict
 
 from .TMIClient import CustomClient
 from .utils.GameCapture import Lidar_Vision, Image_Vision
-from .utils.GameLaunch import GameLauncher
 
 from tminterface.interface import TMInterface
 
@@ -57,7 +56,7 @@ class TrackmaniaEnv(Env):
         while not self.interface.registered:
             time.sleep(0.1)
 
-        self.max_race_time = 2000
+        self.max_race_time = 25_000
         self.first_init = True
         self.i_step = 0
 
