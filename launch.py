@@ -6,7 +6,7 @@ import keyboard
 T = TypeVar("T")
 
 if __name__ == "__main__":
-    env =  TrackmaniaEnv(action_space="controller", observation_space="image")
+    env =  TrackmaniaEnv(observation_space="image")
 
     env.reset()
     while True:
@@ -22,13 +22,11 @@ if __name__ == "__main__":
             print(info["checkpoint_time"])
 
         try:
-            if keyboard.is_pressed("p"):
+            if keyboard.is_pressed("q"):
                 print("Interrupt")
                 break
         except:
             pass
-
-    print(env.simthread.client.init_state)
 
     action = np.array([0, 0])
     env.step(action)

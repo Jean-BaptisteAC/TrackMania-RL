@@ -95,7 +95,7 @@ class Lidar_Vision():
         dim = (int(frame.shape[1]*1.5),int(frame.shape[0]*1.5)) 
         cv2.imshow("frame", cv2.resize(frame, dim))
         
-        if (cv2.waitKey(1) & 0xFF) == ord("p"):
+        if (cv2.waitKey(1) & 0xFF) == ord("q"):
             cv2.destroyAllWindows()
             self.is_running = False
             
@@ -164,7 +164,7 @@ class Image_Vision():
         # cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
         # cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
         
-        if (cv2.waitKey(1) & 0xFF) == ord("p"):
+        if (cv2.waitKey(1) & 0xFF) == ord("q"):
             cv2.destroyAllWindows()
             self.is_running = False
 
