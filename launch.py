@@ -11,16 +11,15 @@ if __name__ == "__main__":
     env.reset()
     while True:
         
-        gas = 0.5
-        steering = np.clip(np.random.normal(), -1, 1)
-        # action = np.array([gas, steering])
-
-        action = np.array([1, 0])
+        gas = np.random.normal() + 0.5
+        steering = np.random.normal()
+        action = np.array([gas, steering])
+        action = [1, 0.1*steering]
 
         new_observation, reward, done, truncated, info = env.step(action)   
 
-        if info != {}:
-            print(info)
+        if info["checkpoint_time"] is not False:
+            print(info["checkpoint_time"])
 
         try:
             if keyboard.is_pressed("p"):
@@ -28,6 +27,8 @@ if __name__ == "__main__":
                 break
         except:
             pass
+
+    print(env.simthread.client.init_state)
 
     action = np.array([0, 0])
     env.step(action)

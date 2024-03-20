@@ -134,7 +134,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CNN+test_time"
+    model_name = "PPO_CNN+testbed_callback_TEST"
     parameters_dict = {"action_space":"controller", "observation_space":"image"}
     save_interval = 10_000
     policy_kwargs = dict(

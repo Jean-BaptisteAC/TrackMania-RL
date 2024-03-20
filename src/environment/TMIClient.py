@@ -20,16 +20,23 @@ class SimStateClient(Client):
         self.is_init = False
         self.passed_checkpoint = False
         self.time = None
+
+        self.init_state = None
         
 
     def on_run_step(self, iface, _time: int):
 
-        if self.is_init is False:
-            iface.respawn()
-            iface.execute_command("warp 0")
-            iface.execute_command("save_state")
-            iface.execute_command("load_state")
-            self.is_init = True
+        # if self.is_init is False:
+        #     iface.respawn()
+        #     # iface.execute_command("warp 0")
+        #     # iface.execute_command("save_state")
+        #     # iface.execute_command("load_state")
+
+        #     self.init_state = iface.get_simulation_state()
+        #     self.is_init = True
+
+        if _time == 0:
+            self.init_state = iface.get_simulation_state()
 
 
         self.sim_state = iface.get_simulation_state()
@@ -41,19 +48,18 @@ class SimStateClient(Client):
         
         iface.set_input_state(**current_action)
         
-        if self.restart:
+        if self.restart and self.init_state:
 
             # iface.respawn()
-            time.sleep(0)
-            iface.execute_command("load_state")
+            # iface.execute_command("load_state")
             # iface.execute_command("warp 0000")
+            iface.rewind_to_state(self.init_state)
             
             self.restart = False
 
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
         
         race_time = iface.get_simulation_state().race_time
-        print(race_time)
         self.time = race_time
         self.passed_checkpoint = True
 

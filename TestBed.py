@@ -1,6 +1,7 @@
 
 from src.environment.TMNFEnv import TrackmaniaEnv
 from stable_baselines3 import PPO, SAC, TD3
+from stable_baselines3.common.callbacks import BaseCallback
 from tqdm.auto import tqdm
 import torch as th
 import numpy as np
@@ -13,6 +14,25 @@ def return_model(algorithm):
         return SAC
     if algorithm == "TD3":
         return TD3
+    
+class TimeRecordingCallback(BaseCallback):
+    def __init__(self, verbose=0):
+        super().__init__(verbose)
+        self.time_recording = []
+
+    def _on_step(self) -> bool:
+        value = self.locals['infos'][0]["checkpoint_time"]
+
+        if value is not False:
+            self.time_recording.append(value)
+        
+        if self.num_timesteps % 2000 == 0:
+            if len(self.time_recording) >= 1:
+                recorded_value = np.array(self.time_recording).mean()
+                self.logger.record("lap_time_mean", recorded_value)
+                self.logger.dump(self.num_timesteps)
+            self.time_recording = []
+        return True
     
 class TestBed:
     def __init__(self, algorithm, policy, model_name, parameters_dict, save_interval, **kwargs):
@@ -66,7 +86,8 @@ class TestBed:
 
             self.model.learn(total_timesteps=self.save_interval, 
                             reset_num_timesteps=False, 
-                            tb_log_name=self.model_name)
+                            tb_log_name=self.model_name, 
+                            callback=TimeRecordingCallback())
 
             self.step += self.save_interval
 

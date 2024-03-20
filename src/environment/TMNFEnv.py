@@ -101,7 +101,7 @@ class TrackmaniaEnv(Env):
     def check_state(self):
         done = False
 
-        info = {}
+        info = {"checkpoint_time":False}
         reward = self.velocity()/100
 
         # Check for exit of the track
