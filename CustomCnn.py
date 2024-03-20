@@ -134,8 +134,8 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CNN+testbed_callback_TEST"
-    parameters_dict = {"action_space":"controller", "observation_space":"image"}
+    model_name = "PPO_CNN+final_codebase"
+    parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,

@@ -28,7 +28,7 @@ class TrackmaniaEnv(Env):
     def __init__(
         self,
         observation_space: str = "image",
-        dimension_reduction: int = 4
+        dimension_reduction: int = 8
     ):
         self.action_space = ControllerActionSpace
 

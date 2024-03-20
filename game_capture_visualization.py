@@ -7,4 +7,3 @@ if __name__ == "__main__":
     while image_vision.is_running:
         obs, asymmetry = image_vision.get_obs()
         image_vision.show()
-        print(asymmetry)
