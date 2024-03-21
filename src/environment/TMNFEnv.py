@@ -36,7 +36,7 @@ class TrackmaniaEnv(Env):
             self.observation_type = "lidar"
             self.viewer = Lidar_Vision()
             self.observation_space = Box(
-                low=-1.0, high=1.0, shape=(16,), dtype=np.float64
+                low=-1.0, high=1.0, shape=(17,), dtype=np.float64
             )
             
 
@@ -47,7 +47,7 @@ class TrackmaniaEnv(Env):
             image_shape = obs.shape
             self.observation_space = Dict(
                 {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
+                 "physics": Box(low=-1.0, high=1.0, shape=(2, ), dtype=np.float64)}
             )
                 
             
@@ -60,7 +60,7 @@ class TrackmaniaEnv(Env):
         while not self.interface.registered:
             time.sleep(0.1)
 
-        self.max_race_time = 25_000
+        self.max_race_time = 60_000
         self.first_init = True
         self.i_step = 0
 
@@ -136,6 +136,12 @@ class TrackmaniaEnv(Env):
         # Time out when max episode duration is reached
         if self.race_time >= self.max_race_time :
             done = True
+            special_reward = -20
+            self.reset()
+
+        # Restart the simulation if client was idle due to SB3 update
+        if self.client.restart_idle:
+            done = True
             self.reset()
         
         return special_reward, done, info
@@ -143,12 +149,12 @@ class TrackmaniaEnv(Env):
 
     def observation(self, screen_observation):
         if self.observation_type == "lidar":
-            velocity = self.speedometer()
-            observation = np.concatenate([screen_observation, velocity])
+            physics = self.physics_instruments()
+            observation = np.concatenate([screen_observation, physics])
 
         elif self.observation_type == "image":
             observation = {"image":screen_observation, 
-                           "physics": torch.tensor(np.array([self.speedometer()]), dtype=torch.float64)
+                           "physics": torch.tensor(self.physics_instruments(), dtype=torch.float64)
             }
         return observation 
         
@@ -186,8 +192,10 @@ class TrackmaniaEnv(Env):
         velocity_oriented = velocity_oriented*3.6 
         return velocity_oriented
     
-    def speedometer(self):
-        return np.array([(self.velocity()/1000 - 0.5)*2])
+    def physics_instruments(self):
+        speedometer = (self.velocity()/1000 - 0.5)*2
+        turning_rate = self.state.scene_mobil.turning_rate
+        return np.array([speedometer, turning_rate])
 
     @property
     def state(self):

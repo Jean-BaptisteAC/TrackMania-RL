@@ -25,6 +25,8 @@ class CustomClient(Client):
         self.passed_checkpoint = False
         self.is_respawn = True
         self.is_finish = False
+
+        self.restart_idle = True
         
     def on_registered(self, iface: TMInterface) -> None:
         print(f'Registered to {iface.server_name}')
@@ -57,7 +59,9 @@ class CustomClient(Client):
                 "steer":         0 ,  
                 "gas":           0 ,   
                 }
-        
+            self.restart_idle = True
+
+
         iface.set_input_state(**current_action)
 
        
@@ -79,7 +83,7 @@ class CustomClient(Client):
 
     def reset_last_action_timer(self):
         self.last_action_timer = self.sim_state.race_time
-    
+        self.restart_idle = False
 
 if __name__ == "__main__":
     

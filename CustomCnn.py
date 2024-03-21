@@ -66,13 +66,13 @@ class CustomPolicyNetwork(nn.Module):
     def __init__(
         self,
         feature_dim: int = 64,
-        last_layer_dim_pi: int = 64,
-        last_layer_dim_vf: int = 64
+        last_layer_dim_pi: int = 128,
+        last_layer_dim_vf: int = 128
     ):
         super().__init__()
         # IMPORTANT:
         # Save output dimensions, used to create the distributions
-        self.hiddel_dim = 64
+        self.hiddel_dim = 128
         self.latent_dim_pi = last_layer_dim_pi
         self.latent_dim_vf = last_layer_dim_vf
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CNN+fix_freeze_2"
+    model_name = "PPO_EasyJump_128"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
@@ -151,5 +151,7 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs, 
                       seed=seed)
     
-    testbed.train(200_000)
-
+    # agent_path = "models/PPO/PPO_Easy_jump_w/_Checkpoint/200k"
+    # testbed.load_agent(model_path=agent_path, step=200_000)
+    
+    testbed.train(400_000)
