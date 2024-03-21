@@ -15,7 +15,9 @@ class CustomClient(Client):
     def __init__(self):
         super().__init__()
         self.sim_state = None
-        self.action = [1, 0]
+        self.action = [0, 0]
+        self.last_action_timer = 0
+
         self.time = None
 
         self.is_init = False
@@ -41,15 +43,24 @@ class CustomClient(Client):
             iface.rewind_to_state(self.init_state)
             self.is_respawn = False
 
+        self.sim_state = iface.get_simulation_state()
+
         current_action = {
             'sim_clear_buffer': True,
             "steer":          int(np.clip(self.action[1]*65536, -65536, 65536)),  
             "gas":            int(np.clip(-self.action[0]*65536, -65536, 65536)),   
             }
         
+        if self.sim_state.race_time - self.last_action_timer > 1_000:
+            current_action = {
+                'sim_clear_buffer': True,
+                "steer":         0 ,  
+                "gas":           0 ,   
+                }
+        
         iface.set_input_state(**current_action)
 
-        self.sim_state = iface.get_simulation_state()
+       
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
@@ -66,6 +77,8 @@ class CustomClient(Client):
         self.passed_checkpoint = False
         self.is_finish = False
 
+    def reset_last_action_timer(self):
+        self.last_action_timer = self.sim_state.race_time
     
 
 if __name__ == "__main__":

@@ -70,6 +70,7 @@ class TrackmaniaEnv(Env):
     def step(self, action):
 
         self.client.action = action
+        self.client.reset_last_action_timer()
         
         screen_observation, distance_observation = self.viewer.get_obs()
         observation = self.observation(screen_observation)

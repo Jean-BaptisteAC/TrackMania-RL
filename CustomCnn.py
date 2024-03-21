@@ -134,7 +134,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CNN+final_codebase"
+    model_name = "PPO_CNN+fix_freeze_2"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
