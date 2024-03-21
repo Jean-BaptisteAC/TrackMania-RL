@@ -47,7 +47,7 @@ class TrackmaniaEnv(Env):
             image_shape = obs.shape
             self.observation_space = Dict(
                 {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(2, ), dtype=np.float64)}
+                 "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
                 
             
@@ -75,7 +75,7 @@ class TrackmaniaEnv(Env):
         screen_observation, distance_observation = self.viewer.get_obs()
         observation = self.observation(screen_observation)
 
-        velocity_reward = self.velocity()/100
+        velocity_reward = self.velocity()[2]/100
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             wall_penalty = 1.0
@@ -113,7 +113,7 @@ class TrackmaniaEnv(Env):
 
         # Check for complete stop of the car
         if self.race_time >= 1_000:
-            if self.velocity() < 1:
+            if self.velocity()[2] < 1:
                 done = True
                 special_reward = -20
                 self.reset()
@@ -166,36 +166,29 @@ class TrackmaniaEnv(Env):
         info = {}
         
         return observation, info
-
-    
-    def vehicle_normal_vector(self):
-        """ Computation of the direction vector of the car """
-
-        yaw_pitch_roll = self.state.yaw_pitch_roll
-
-        # Track mania X, Y, Z is not the usual system: Y corresponds to the altitude.
-        # We do not take into account the roll as it has no impact on the direction of the car
-        orientation = [np.sin(yaw_pitch_roll[0]),
-                    -np.sin(yaw_pitch_roll[1]), 
-                    np.cos(yaw_pitch_roll[0])]
-        orientation = orientation / np.linalg.norm(orientation)
-
-        return orientation
     
     def velocity(self):
-        
-        # Projection of the speed vector on the direction vector of the car
-        velocity_oriented = np.dot(self.vehicle_normal_vector(), 
-                                 self.state.velocity)
+        # Projection of the speed vector on the direction of the car
+        # Track mania X, Y, Z is not the usual system: Y corresponds to the altitude.
+        # Local velocity in m/s is: lateral, vertical, forward
+        local_velocity = self.state.scene_mobil.current_local_speed
+        local_velocity = np.array(list(local_velocity.to_numpy()))
         
         # Conversion from m/s to km/h
-        velocity_oriented = velocity_oriented*3.6 
-        return velocity_oriented
+        local_velocity = local_velocity*3.6 
+        return local_velocity
     
     def physics_instruments(self):
-        speedometer = (self.velocity()/1000 - 0.5)*2
+        forward_speed = self.velocity()[2]/1000
+        lateral_speed = self.velocity()[0]/1000
+
+        pitch_angle = self.state.yaw_pitch_roll[1]/np.pi
+        roll_angle = self.state.yaw_pitch_roll[2]/np.pi
+
         turning_rate = self.state.scene_mobil.turning_rate
-        return np.array([speedometer, turning_rate])
+
+        # return np.array([forward_speed, lateral_speed, turning_rate])
+        return np.array([forward_speed])
 
     @property
     def state(self):

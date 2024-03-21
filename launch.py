@@ -7,17 +7,21 @@ T = TypeVar("T")
 
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", dimension_reduction=8)
-
+    i = 0
     env.reset()
     while True:
         
         gas = np.random.normal() + 0.5
-        steering = np.random.normal()
+        steering = 10*np.random.normal()
         action = np.array([gas, steering])
-        action = [1, 0.1*steering]
         action = [0, 0]
 
         new_observation, reward, done, truncated, info = env.step(action)
+
+        i += 1
+        if i == 5:
+            print("speed ", env.velocity()[2])
+            i = 0
 
         if info["checkpoint_time"] is not False:
             print(info["checkpoint_time"])
