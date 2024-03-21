@@ -16,12 +16,13 @@ class CustomClient(Client):
         super().__init__()
         self.sim_state = None
         self.action = [1, 0]
-        self.passed_checkpoint = False
         self.time = None
 
         self.is_init = False
         self.init_state = None
+        self.passed_checkpoint = False
         self.is_respawn = True
+        self.is_finish = False
         
     def on_registered(self, iface: TMInterface) -> None:
         print(f'Registered to {iface.server_name}')
@@ -52,17 +53,18 @@ class CustomClient(Client):
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
-        
         if current >= 1:
-            self.time = self.sim_state.race_time
             self.passed_checkpoint = True
 
             if current == target:
                 iface.prevent_simulation_finish()
+                self.time = self.sim_state.race_time/1000 # race time is in milliseconds
+                self.is_finish = True
 
     def respawn(self):
         self.is_respawn = True 
         self.passed_checkpoint = False
+        self.is_finish = False
 
     
 

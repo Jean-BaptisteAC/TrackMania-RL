@@ -71,12 +71,10 @@ class TrackmaniaEnv(Env):
 
         self.client.action = action
         
-        velocity_reward, done, info  = self.check_state()
         screen_observation, distance_observation = self.viewer.get_obs()
-        # self.viewer.show()
-
         observation = self.observation(screen_observation)
 
+        velocity_reward = self.velocity()/100
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             wall_penalty = 1.0
@@ -92,43 +90,46 @@ class TrackmaniaEnv(Env):
             distance_reward = distance_observation
             alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
+
+        special_reward, done, info  = self.check_state()
+        if special_reward is not None:
+            reward = special_reward
         
         truncated = False
 
         return observation, reward, done, truncated, info
 
     def check_state(self):
+        special_reward = None 
         done = False
-
         info = {"checkpoint_time":False}
-        reward = self.velocity()/100
 
         # Check for exit of the track
         if self.position[1] < 9.2:
             done = True
-            reward = -20
+            special_reward = -20
             self.reset()
 
         # Check for complete stop of the car
         if self.race_time >= 1_000:
             if self.velocity() < 1:
                 done = True
-                reward = -20
+                special_reward = -20
                 self.reset()
 
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:
-            done = True
-            reward = 100
-            info = {"checkpoint_time":self.client.time}
-            self.reset()
+            special_reward = 100
             self.client.passed_checkpoint = False
-            
+            if self.client.is_finish:
+                done = True    
+                info = {"checkpoint_time":self.client.time}
+                self.reset()
 
         # Check for contact with barriers in lidar mode
         if self.viewer.touch_boarder():
             done = True
-            reward = -20
+            special_reward = -20
             self.reset()
             
         # Time out when max episode duration is reached
@@ -136,7 +137,7 @@ class TrackmaniaEnv(Env):
             done = True
             self.reset()
         
-        return reward, done, info
+        return special_reward, done, info
     
 
     def observation(self, screen_observation):
