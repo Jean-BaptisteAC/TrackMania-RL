@@ -49,8 +49,6 @@ class TrackmaniaEnv(Env):
                 {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
                  "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
-                
-            
 
         self.interface = TMInterface()
         self.client = CustomClient()
@@ -75,7 +73,7 @@ class TrackmaniaEnv(Env):
         screen_observation, distance_observation = self.viewer.get_obs()
         observation = self.observation(screen_observation)
 
-        velocity_reward = self.velocity()[2]/100
+        velocity_reward = np.linalg.norm(self.velocity())/100
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             wall_penalty = 1.0
