@@ -95,7 +95,7 @@ class Lidar_Vision():
         dim = (int(frame.shape[1]*1.5),int(frame.shape[0]*1.5)) 
         cv2.imshow("frame", cv2.resize(frame, dim))
         
-        if (cv2.waitKey(1) & 0xFF) == ord("p"):
+        if (cv2.waitKey(1) & 0xFF) == ord("q"):
             cv2.destroyAllWindows()
             self.is_running = False
             
@@ -114,7 +114,7 @@ class Lidar_Vision():
     
 
 class Image_Vision():
-    def __init__(self):
+    def __init__(self, dimension_reduction = 4):
         self.hwnd = wind32.FindWindow(None, os.getenv('GAME_WINDOW_NAME'))
 
         # Crop the screenshot to remove unecessary information and reduce dimensionality
@@ -122,7 +122,7 @@ class Image_Vision():
         self.upper_margin = 40 + 180
         self.lower_margin = 10 + 70
 
-        self.dimension_reduction = 4
+        self.dimension_reduction = dimension_reduction
             
         self.get_frame()
         self.is_running = True
@@ -142,6 +142,11 @@ class Image_Vision():
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         dim = (int(frame.shape[1]/self.dimension_reduction),
                int(frame.shape[0]/self.dimension_reduction))
+    
+
+        if dim[0] % 2 == 1:
+            dim = (dim[0] + 1, dim[1])
+        
         frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
         self.frame = frame
 
@@ -158,13 +163,13 @@ class Image_Vision():
         cv2.imshow("frame", cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST))
 
         
-        # left_right_dim = (int(self.left.shape[1]*self.dimension_reduction),
-        #                   int(self.left.shape[0]*self.dimension_reduction))
+        left_right_dim = (int(self.left.shape[1]*self.dimension_reduction),
+                          int(self.left.shape[0]*self.dimension_reduction))
 
-        # cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
-        # cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
+        cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
+        cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
         
-        if (cv2.waitKey(1) & 0xFF) == ord("p"):
+        if (cv2.waitKey(1) & 0xFF) == ord("q"):
             cv2.destroyAllWindows()
             self.is_running = False
 
@@ -183,14 +188,11 @@ class Image_Vision():
         
         H, W = self.frame.shape[0], self.frame.shape[1]
 
-
-        horizon = 10
-        bottom = 20
+        horizon = round(H*10/56)
+        bottom = round(H*20/56)
 
         self.left = self.frame[horizon:H-bottom, 1:W//2]
         self.right = self.frame[horizon:H-bottom, W:W//2:-1]
-        # self.right = self.frame[horizon:H-bottom, W//2::-1]
-
 
         flat_left = np.reshape(self.left, -1)/255
         flat_right = np.reshape(self.right, -1)/255

@@ -63,6 +63,7 @@ class TestBed:
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
+                                             n_steps=6144,
                                              verbose=1,
                                              tensorboard_log=self.logdir,
                                              **SB3_arguments)
@@ -73,9 +74,11 @@ class TestBed:
     
         self.step = 0
         
-    def load_agent(self, model_path):
+    def load_agent(self, model_path, step):
         self.baseline = model_path
         self.model = return_model(self.algorithm).load(model_path, env=self.env)
+        self.step = step
+        self.total_timestep = step
         
     
     def train(self, time_steps):
@@ -86,6 +89,7 @@ class TestBed:
 
             self.model.learn(total_timesteps=self.save_interval, 
                             reset_num_timesteps=False, 
+                            log_interval = 1,
                             tb_log_name=self.model_name, 
                             callback=TimeRecordingCallback())
 

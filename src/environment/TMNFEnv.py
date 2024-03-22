@@ -4,9 +4,10 @@ import numpy as np
 from gymnasium import Env
 from gymnasium.spaces import Box, MultiBinary, Dict
 
-from .TMIClient import ThreadedClient
+from .TMIClient import CustomClient
 from .utils.GameCapture import Lidar_Vision, Image_Vision
-from .utils.GameLaunch import GameLauncher
+
+from tminterface.interface import TMInterface
 
 import torch
  
@@ -26,58 +27,55 @@ class TrackmaniaEnv(Env):
     """
     def __init__(
         self,
-        action_space: str = "controller",
-        observation_space: str = "lidar",
+        observation_space: str = "image",
+        dimension_reduction: int = 8
     ):
-        if action_space == "arrows":
-            self.action_space = ArrowsActionSpace
-        elif action_space == "controller":
-            self.action_space = ControllerActionSpace
+        self.action_space = ControllerActionSpace
 
         if observation_space == "lidar":
             self.observation_type = "lidar"
-            self.observation_space = Box(
-                low=-1.0, high=1.0, shape=(16,), dtype=np.float64
-            )
             self.viewer = Lidar_Vision()
+            self.observation_space = Box(
+                low=-1.0, high=1.0, shape=(17,), dtype=np.float64
+            )
+            
 
         elif observation_space == "image":
             self.observation_type = "image"
-
+            self.viewer = Image_Vision(dimension_reduction=dimension_reduction)
+            obs, _ = self.viewer.get_obs()
+            image_shape = obs.shape
             self.observation_space = Dict(
-                {"image": Box(low=0, high=255, shape=(56, 158, 1), dtype=np.uint8), 
+                {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
                  "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
                 
-            self.viewer = Image_Vision()
+            
 
-        game_launcher  = GameLauncher()
-        if not game_launcher.game_started:
-            game_launcher.start_game()
-            print("game started")
-            input("press enter when game is ready")
-            time.sleep(4)
-        
-        self.simthread = ThreadedClient()
-        self.current_race_time = 0
-        self.max_race_time = 25_000
+        self.interface = TMInterface()
+        self.client = CustomClient()
+        self.interface.set_timeout(10_000)
+        self.interface.register(self.client)
+
+        while not self.interface.registered:
+            time.sleep(0.1)
+
+        self.max_race_time = 60_000
         self.first_init = True
         self.i_step = 0
 
     def close(self):
-        self.simthread.iface.close()
+        self.interface.close()
 
     def step(self, action):
 
-        self._continuous_action_to_command(action)
+        self.client.action = action
+        self.client.reset_last_action_timer()
         
-        
-        velocity_reward, done, info  = self.check_state()
         screen_observation, distance_observation = self.viewer.get_obs()
-        self.viewer.show()
-
         observation = self.observation(screen_observation)
 
+        velocity_reward = self.velocity()[2]/100
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             wall_penalty = 1.0
@@ -93,119 +91,108 @@ class TrackmaniaEnv(Env):
             distance_reward = distance_observation
             alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
+
+        special_reward, done, info  = self.check_state()
+        if special_reward is not None:
+            reward = special_reward
         
         truncated = False
 
         return observation, reward, done, truncated, info
 
     def check_state(self):
+        special_reward = None 
         done = False
-
         info = {"checkpoint_time":False}
-        reward = self.velocity()/100
 
         # Check for exit of the track
         if self.position[1] < 9.2:
             done = True
-            reward = -20
+            special_reward = -20
             self.reset()
 
         # Check for complete stop of the car
-        elif (self.race_time - self.current_race_time) >= 1_000:
-            if self.velocity() < 1:
+        if self.race_time >= 1_000:
+            if self.velocity()[2] < 1:
                 done = True
-                reward = -20
+                special_reward = -20
                 self.reset()
 
         # Check for finishing in the checkpoint
-        elif self.simthread.client.passed_checkpoint:
-            done = True
-            reward = 0
-            info = {"checkpoint_time":self.simthread.client.time}
-            self.reset()
-            self.simthread.client.passed_checkpoint = False
-            
+        if self.client.passed_checkpoint:
+            special_reward = 100
+            self.client.passed_checkpoint = False
+            if self.client.is_finish:
+                done = True    
+                info = {"checkpoint_time":self.client.time}
+                self.reset()
 
         # Check for contact with barriers in lidar mode
-        elif self.viewer.touch_boarder():
+        if self.viewer.touch_boarder():
             done = True
-            reward = -20
+            special_reward = -20
             self.reset()
             
         # Time out when max episode duration is reached
-        elif (self.race_time - self.current_race_time) >= self.max_race_time :
+        if self.race_time >= self.max_race_time :
+            done = True
+            special_reward = -20
+            self.reset()
+
+        # Restart the simulation if client was idle due to SB3 update
+        if self.client.restart_idle:
             done = True
             self.reset()
         
-        return reward, done, info
+        return special_reward, done, info
     
 
     def observation(self, screen_observation):
         if self.observation_type == "lidar":
-            velocity = self.speedometer()
-            observation = np.concatenate([screen_observation, velocity])
+            physics = self.physics_instruments()
+            observation = np.concatenate([screen_observation, physics])
 
         elif self.observation_type == "image":
             observation = {"image":screen_observation, 
-                           "physics": torch.tensor(np.array([self.speedometer()]), dtype=torch.float64)
+                           "physics": torch.tensor(self.physics_instruments(), dtype=torch.float64)
             }
         return observation 
         
     def reset(self, seed=0):
-        if self.first_init:
-            self.current_race_time = 0
-            self.first_init = False
-        else:
-            self.current_race_time = self.race_time
-        self._restart_race_command()
+        self.client.respawn()
         
         screen_observation, _ = self.viewer.get_obs()
         observation = self.observation(screen_observation)
         info = {}
         
         return observation, info
-
-    def action_to_command(self, action):
-        if isinstance(self.action_space, MultiBinary):
-            return self._discrete_action_to_command(action)
-        elif isinstance(self.action_space, Box):
-            return self._continuous_action_to_command(action)
-
-    def _continuous_action_to_command(self, action):
-        self.simthread.action = action
-
-    def _restart_race_command(self):
-        self.simthread.client.respawn()
-
-    # Computation of the direction vector of the car
-    def vehicle_normal_vector(self):
-        yaw_pitch_roll = self.state.yaw_pitch_roll
-
-        # Track mania X, Y, Z is not the usual system: Y corresponds to the altitude.
-        # We do not take into account the roll as it has no impact on the direction of the car
-        orientation = [np.sin(yaw_pitch_roll[0]),
-                    -np.sin(yaw_pitch_roll[1]), 
-                    np.cos(yaw_pitch_roll[0])]
-        orientation = orientation / np.linalg.norm(orientation)
-
-        return orientation
     
     def velocity(self):
-        
-        # Projection of the speed vector on the direction vector of the car
-        velocity_oriented = np.dot(self.vehicle_normal_vector(), 
-                                 self.state.velocity)
+        # Projection of the speed vector on the direction of the car
+        # Track mania X, Y, Z is not the usual system: Y corresponds to the altitude.
+        # Local velocity in m/s is: lateral, vertical, forward
+        local_velocity = self.state.scene_mobil.current_local_speed
+        local_velocity = np.array(list(local_velocity.to_numpy()))
         
         # Conversion from m/s to km/h
-        velocity_oriented = velocity_oriented*3.6 
-        return velocity_oriented
+        local_velocity = local_velocity*3.6 
+        return local_velocity
     
-    def speedometer(self):
-        return np.array([(self.velocity()/1000 - 0.5)*2])
+    def physics_instruments(self):
+        forward_speed = self.velocity()[2]/1000
+        lateral_speed = self.velocity()[0]/1000
+
+        pitch_angle = self.state.yaw_pitch_roll[1]/np.pi
+        roll_angle = self.state.yaw_pitch_roll[2]/np.pi
+
+        turning_rate = self.state.scene_mobil.turning_rate
+
+        # return np.array([forward_speed, lateral_speed, turning_rate])
+        return np.array([forward_speed])
 
     @property
     def state(self):
-        return self.simthread.data
+        return self.client.sim_state
 
     @property
     def position(self):
