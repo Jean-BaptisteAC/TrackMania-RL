@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
         i += 1
         if i == 5:
-            print(new_observation["physics"])
+            print(reward)
             i = 0
 
         if info["checkpoint_time"] is not False:

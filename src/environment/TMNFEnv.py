@@ -103,11 +103,11 @@ class TrackmaniaEnv(Env):
         done = False
         info = {"checkpoint_time":False}
 
-        # Check for exit of the track
-        if self.position[1] < 9.2:
-            done = True
-            special_reward = -20
-            self.reset()
+        # # Check for exit of the track
+        # if self.position[1] < 9.2:
+        #     done = True
+        #     special_reward = -20
+        #     self.reset()
 
         # Check for complete stop of the car
         if self.race_time >= 1_000:
