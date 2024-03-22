@@ -47,7 +47,7 @@ class TrackmaniaEnv(Env):
             image_shape = obs.shape
             self.observation_space = Dict(
                 {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
+                 "physics": Box(low=-1.0, high=1.0, shape=(6, ), dtype=np.float64)}
             )
 
         self.interface = TMInterface()
@@ -185,8 +185,20 @@ class TrackmaniaEnv(Env):
 
         turning_rate = self.state.scene_mobil.turning_rate
 
-        # return np.array([forward_speed, lateral_speed, turning_rate])
-        return np.array([forward_speed])
+        ground_contact = self.has_ground_contact()
+
+        return np.array([forward_speed, 
+                         lateral_speed, 
+                         pitch_angle, 
+                         roll_angle,
+                         turning_rate, 
+                         ground_contact])
+
+    def has_ground_contact(self):
+        for wheel in self.state.simulation_wheels:
+            if wheel.real_time_state.has_ground_contact:
+                return 1.0
+        return 0.0
 
     @property
     def state(self):
