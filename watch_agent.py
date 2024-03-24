@@ -20,6 +20,9 @@ if __name__ == "__main__":
         action, _ = model_to_watch.predict(obs)
         obs, reward, done, _, info = env.step(action)
 
+        if info["checkpoint_time"] is not False:
+            print(info["checkpoint_time"])
+
         try:
             if keyboard.is_pressed("q"):
                 print("Interrupt")

@@ -47,7 +47,7 @@ class TrackmaniaEnv(Env):
             image_shape = obs.shape
             self.observation_space = Dict(
                 {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(6, ), dtype=np.float64)}
+                 "physics": Box(low=-1.0, high=1.0, shape=(1, ), dtype=np.float64)}
             )
 
         self.interface = TMInterface()
@@ -58,7 +58,7 @@ class TrackmaniaEnv(Env):
         while not self.interface.registered:
             time.sleep(0.1)
 
-        self.max_race_time = 60_000
+        self.max_race_time = 30_000
         self.first_init = True
         self.i_step = 0
 
@@ -74,6 +74,9 @@ class TrackmaniaEnv(Env):
         observation = self.observation(screen_observation)
 
         velocity_reward = np.linalg.norm(self.velocity())/100
+        velocity_target = 2.0 
+        velocity_reward = velocity_target - abs(velocity_target - velocity_reward)
+
         contact = self.state.scene_mobil.has_any_lateral_contact
         if contact:
             wall_penalty = 1.0
@@ -103,11 +106,11 @@ class TrackmaniaEnv(Env):
         done = False
         info = {"checkpoint_time":False}
 
-        # # Check for exit of the track
-        # if self.position[1] < 9.2:
-        #     done = True
-        #     special_reward = -20
-        #     self.reset()
+        # Check for exit of the track
+        if self.position[1] < 9.2:
+            done = True
+            special_reward = -20
+            self.reset()
 
         # Check for complete stop of the car
         if self.race_time >= 1_000:
@@ -187,12 +190,14 @@ class TrackmaniaEnv(Env):
 
         ground_contact = self.has_ground_contact()
 
-        return np.array([forward_speed, 
-                         lateral_speed, 
-                         pitch_angle, 
-                         roll_angle,
-                         turning_rate, 
-                         ground_contact])
+        # return np.array([forward_speed, 
+        #                  lateral_speed, 
+        #                  pitch_angle, 
+        #                  roll_angle,
+        #                  turning_rate, 
+        #                  ground_contact])
+
+        return np.array([forward_speed])
 
     def has_ground_contact(self):
         for wheel in self.state.simulation_wheels:

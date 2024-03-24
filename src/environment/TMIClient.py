@@ -63,7 +63,6 @@ class CustomClient(Client):
 
 
         iface.set_input_state(**current_action)
-
        
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
