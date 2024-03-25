@@ -100,11 +100,8 @@ class TrackmaniaEnv(Env):
         self.total_distance += ((self.state.race_time - self.last_time_step) /1000) * (np.linalg.norm(self.velocity())/3.6)
         self.last_time_step = self.state.race_time
 
-        velocity_reward = np.linalg.norm(self.velocity())/100
-        velocity_target = 3.0 
-        velocity_reward = velocity_target - abs(velocity_target - velocity_reward)
-
-        # velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
+        # velocity_reward = np.linalg.norm(self.velocity())/100
+        velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
 
         contact = self.state.scene_mobil.has_any_lateral_contact
         wall_penalty = float(contact)
