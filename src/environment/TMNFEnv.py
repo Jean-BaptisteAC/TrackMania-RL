@@ -1,6 +1,9 @@
+import os
+import pickle
 from typing import TypeVar
 import time
 import numpy as np
+import random
 from gymnasium import Env
 from gymnasium.spaces import Box, MultiBinary, Dict
 
@@ -53,13 +56,37 @@ class TrackmaniaEnv(Env):
         while not self.interface.registered:
             time.sleep(0.1)
 
-        self.max_race_time = 30_000
+        self.max_race_time = 120_000
         self.first_init = True
         self.total_distance = 0
         self.last_time_step = 0
 
-    def close(self):
-        self.interface.close()
+        self.train_steps = 1500
+        self.current_step = 0
+        self.mode = "train"
+
+        run_folder = "track_data/Training_dataset_tech/run-1"
+        state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
+        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files][:1]
+
+    def reset(self, seed=0):
+
+        if self.mode == "train":
+            self.client.mode = "train"
+            state = random.choice(self.save_states)
+        else:
+            self.client.mode = "eval"
+            state = None
+        
+        self.client.respawn(state)
+        
+        screen_observation, _ = self.viewer.get_obs()
+        observation = self.observation(screen_observation)
+        info = {}
+
+        self.total_distance = 0
+        
+        return observation, info
 
     def step(self, action):
 
@@ -96,7 +123,34 @@ class TrackmaniaEnv(Env):
         
         truncated = False
 
+        update_done = self.update_env_mode(done)
+        if update_done is not None:
+            done = update_done
+
         return observation, reward, done, truncated, info
+    
+    def close(self):
+        self.interface.close()
+
+    def update_env_mode(self, done):
+        if self.mode == "train":
+            self.current_step += 1
+        
+            if self.current_step == self.train_steps:
+                self.mode = "eval"
+                print("current mode:", self.mode)
+                self.current_step = 0
+                self.reset()
+                return True
+  
+        elif self.mode == "eval" and done:
+            self.mode = "train"
+            print("current mode:", self.mode)
+            self.reset()
+            return True
+        
+        return None
+        
 
     def check_state(self):
         special_reward = None 
@@ -142,6 +196,7 @@ class TrackmaniaEnv(Env):
             special_reward = -20
             info["total_distance"] = self.total_distance
             self.reset()
+
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
             done = True
@@ -161,16 +216,6 @@ class TrackmaniaEnv(Env):
             }
         return observation 
         
-    def reset(self, seed=0):
-        self.client.respawn()
-        
-        screen_observation, _ = self.viewer.get_obs()
-        observation = self.observation(screen_observation)
-        info = {}
-
-        self.total_distance = 0
-        
-        return observation, info
     
     def velocity(self):
         # Projection of the speed vector on the direction of the car

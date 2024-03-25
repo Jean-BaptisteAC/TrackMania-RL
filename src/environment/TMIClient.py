@@ -27,6 +27,9 @@ class CustomClient(Client):
         self.is_finish = False
 
         self.restart_idle = True
+
+        self.mode = "eval"
+        self.train_state = None
         
     def on_registered(self, iface: TMInterface) -> None:
         print(f'Registered to {iface.server_name}')
@@ -42,7 +45,12 @@ class CustomClient(Client):
             self.time = None
 
         elif self.is_respawn and self.init_state:
-            iface.rewind_to_state(self.init_state)
+
+            if self.mode == "eval":
+                iface.rewind_to_state(self.init_state)
+            elif self.mode == "train":
+                iface.rewind_to_state(self.train_state)
+
             self.is_respawn = False
 
         self.sim_state = iface.get_simulation_state()
@@ -75,10 +83,11 @@ class CustomClient(Client):
                 self.time = self.sim_state.race_time/1000 # race time is in milliseconds
                 self.is_finish = True
 
-    def respawn(self):
+    def respawn(self, state):
         self.is_respawn = True 
         self.passed_checkpoint = False
         self.is_finish = False
+        self.train_state = state
 
     def reset_last_action_timer(self):
         self.last_action_timer = self.sim_state.race_time

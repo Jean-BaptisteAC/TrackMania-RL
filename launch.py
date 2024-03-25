@@ -1,25 +1,17 @@
-from typing import TypeVar
-from stable_baselines3.common.env_checker import check_env 
 from src.environment.TMNFEnv import TrackmaniaEnv
 import numpy as np
 import keyboard
-T = TypeVar("T")
 
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", dimension_reduction=8)
-    i = 0
     env.reset()
     while True:
         
-        gas = np.random.normal() + 0.5
-        steering = 10*np.random.normal()
-        action = np.array([gas, steering])
         action = [0, 0]
-
         new_observation, reward, done, truncated, info = env.step(action)
 
-        if info["total_distance"] is not False:
-            print(info["total_distance"])
+        # if info["total_distance"] is not False:
+        #     print(info["total_distance"])
 
         try:
             if keyboard.is_pressed("q"):
