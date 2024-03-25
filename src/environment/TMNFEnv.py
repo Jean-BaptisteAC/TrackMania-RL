@@ -61,13 +61,13 @@ class TrackmaniaEnv(Env):
         self.total_distance = 0
         self.last_time_step = 0
 
-        self.train_steps = 1500
+        self.train_steps = 3_000
         self.current_step = 0
         self.mode = "train"
 
         run_folder = "track_data/Training_dataset_tech/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
-        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files][:1]
+        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
 
     def reset(self, seed=0):
 
@@ -101,8 +101,10 @@ class TrackmaniaEnv(Env):
         self.last_time_step = self.state.race_time
 
         velocity_reward = np.linalg.norm(self.velocity())/100
-        velocity_target = 2.0 
+        velocity_target = 3.0 
         velocity_reward = velocity_target - abs(velocity_target - velocity_reward)
+
+        # velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
 
         contact = self.state.scene_mobil.has_any_lateral_contact
         wall_penalty = float(contact)
@@ -201,6 +203,10 @@ class TrackmaniaEnv(Env):
         if self.client.restart_idle:
             done = True
             self.reset()
+
+        if self.mode == "train":
+            info["checkpoint_time"] = False
+            info["total_distance"] = False
         
         return special_reward, done, info
     
