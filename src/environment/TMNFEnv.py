@@ -20,11 +20,6 @@ ObsType = TypeVar("ObsType")
 
 
 class TrackmaniaEnv(Env):
-    """
-    Gym env interfacing the game.
-    Observations are the rays of the game viewer.
-    Controls are the arrow keys or the gas and steer.
-    """
     def __init__(
         self,
         observation_space: str = "image",
@@ -78,10 +73,7 @@ class TrackmaniaEnv(Env):
         velocity_reward = velocity_target - abs(velocity_target - velocity_reward)
 
         contact = self.state.scene_mobil.has_any_lateral_contact
-        if contact:
-            wall_penalty = 1.0
-        else: 
-            wall_penalty = 0.0
+        wall_penalty = float(contact)
 
         if self.observation_type == "lidar":
             distance_reward = abs(1 - distance_observation/0.27)
@@ -190,14 +182,12 @@ class TrackmaniaEnv(Env):
 
         ground_contact = self.has_ground_contact()
 
-        # return np.array([forward_speed, 
-        #                  lateral_speed, 
-        #                  pitch_angle, 
-        #                  roll_angle,
-        #                  turning_rate, 
-        #                  ground_contact])
-
-        return np.array([forward_speed])
+        return np.array([forward_speed, 
+                         lateral_speed, 
+                         pitch_angle, 
+                         roll_angle,
+                         turning_rate, 
+                         ground_contact])
 
     def has_ground_contact(self):
         for wheel in self.state.simulation_wheels:
