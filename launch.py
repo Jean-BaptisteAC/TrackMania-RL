@@ -18,13 +18,8 @@ if __name__ == "__main__":
 
         new_observation, reward, done, truncated, info = env.step(action)
 
-        i += 1
-        if i == 5:
-            print(reward)
-            i = 0
-
-        if info["checkpoint_time"] is not False:
-            print(info["checkpoint_time"])
+        if info["total_distance"] is not False:
+            print(info["total_distance"])
 
         try:
             if keyboard.is_pressed("q"):

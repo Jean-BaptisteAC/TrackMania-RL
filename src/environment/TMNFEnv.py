@@ -55,7 +55,8 @@ class TrackmaniaEnv(Env):
 
         self.max_race_time = 30_000
         self.first_init = True
-        self.i_step = 0
+        self.total_distance = 0
+        self.last_time_step = 0
 
     def close(self):
         self.interface.close()
@@ -67,6 +68,10 @@ class TrackmaniaEnv(Env):
         
         screen_observation, distance_observation = self.viewer.get_obs()
         observation = self.observation(screen_observation)
+
+        # Total distance in meters: (timestep in seconds) x (velocity in meters per second)
+        self.total_distance += ((self.state.race_time - self.last_time_step) /1000) * (np.linalg.norm(self.velocity())/3.6)
+        self.last_time_step = self.state.race_time
 
         velocity_reward = np.linalg.norm(self.velocity())/100
         velocity_target = 2.0 
@@ -96,12 +101,14 @@ class TrackmaniaEnv(Env):
     def check_state(self):
         special_reward = None 
         done = False
-        info = {"checkpoint_time":False}
+        info = {"checkpoint_time":False, 
+                "total_distance":False}
 
         # Check for exit of the track
         if self.position[1] < 9.2:
             done = True
             special_reward = -20
+            info["total_distance"] = self.total_distance
             self.reset()
 
         # Check for complete stop of the car
@@ -109,6 +116,7 @@ class TrackmaniaEnv(Env):
             if self.velocity()[2] < 1:
                 done = True
                 special_reward = -20
+                info["total_distance"] = self.total_distance
                 self.reset()
 
         # Check for finishing in the checkpoint
@@ -117,21 +125,23 @@ class TrackmaniaEnv(Env):
             self.client.passed_checkpoint = False
             if self.client.is_finish:
                 done = True    
-                info = {"checkpoint_time":self.client.time}
+                info["checkpoint_time"] = self.client.time
+                info["total_distance"] = self.total_distance
                 self.reset()
 
         # Check for contact with barriers in lidar mode
         if self.viewer.touch_boarder():
             done = True
             special_reward = -20
+            info["total_distance"] = self.total_distance
             self.reset()
             
         # Time out when max episode duration is reached
         if self.race_time >= self.max_race_time :
             done = True
             special_reward = -20
+            info["total_distance"] = self.total_distance
             self.reset()
-
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
             done = True
@@ -157,6 +167,8 @@ class TrackmaniaEnv(Env):
         screen_observation, _ = self.viewer.get_obs()
         observation = self.observation(screen_observation)
         info = {}
+
+        self.total_distance = 0
         
         return observation, info
     
