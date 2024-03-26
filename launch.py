@@ -3,7 +3,7 @@ import numpy as np
 import keyboard
 
 if __name__ == "__main__":
-    env =  TrackmaniaEnv(observation_space="image", dimension_reduction=8)
+    env =  TrackmaniaEnv(observation_space="image", dimension_reduction=6)
     env.reset()
     i = 0
     while True:

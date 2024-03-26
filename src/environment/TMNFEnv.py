@@ -77,8 +77,8 @@ class TrackmaniaEnv(Env):
         run_folder = "track_data/Training_dataset_tech/run-2"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
-        for state in self.save_states:
-            state.dyna.current_state.linear_speed = np.array([0, 0, 0])
+        # for state in self.save_states:
+        #     state.dyna.current_state.linear_speed = np.array([0, 0, 0])
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -125,6 +125,7 @@ class TrackmaniaEnv(Env):
         self.client.reset_last_action_timer()
         
         screen_observation, distance_observation = self.viewer.get_obs()
+        # self.viewer.show()
         observation = self.observation(screen_observation)
 
         # Total distance in meters: (timestep in seconds) x (velocity in meters per second)
@@ -153,9 +154,9 @@ class TrackmaniaEnv(Env):
         
         truncated = False
 
-        update_done = self.update_env_mode(done)
-        if update_done is not None:
-            done = update_done
+        # update_done = self.update_env_mode(done)
+        # if update_done is not None:
+        #     done = update_done
 
         return observation, reward, done, truncated, info
     
@@ -322,9 +323,7 @@ class TrackmaniaEnv(Env):
         # compute distance
         dis = self.distance_3D(x, y, z, current_position[0], current_position[1], current_position[2])
         # find the minima
-        min_idxs = argrelmin(dis)[0]
-        # take the minimum
-        glob_min_idx = min_idxs[np.argmin(dis[min_idxs])]
+        glob_min_idx = np.argmin(dis)
 
         # minimal distance to centerline
         min_d = dis[glob_min_idx]

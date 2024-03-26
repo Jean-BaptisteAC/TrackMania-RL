@@ -28,7 +28,7 @@ class CustomClient(Client):
 
         self.restart_idle = True
 
-        self.mode = "eval"
+        self.mode = "train"
         self.train_state = None
         
     def on_registered(self, iface: TMInterface) -> None:
@@ -76,7 +76,7 @@ class CustomClient(Client):
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
         if current >= 1:
-            self.passed_checkpoint = True
+            # self.passed_checkpoint = True
 
             if current == target:
                 iface.prevent_simulation_finish()
