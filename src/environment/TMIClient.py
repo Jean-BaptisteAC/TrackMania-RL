@@ -50,7 +50,7 @@ class CustomClient(Client):
                 iface.rewind_to_state(self.init_state)
             elif self.mode == "train":
                 iface.rewind_to_state(self.train_state)
-
+            
             self.is_respawn = False
 
         self.sim_state = iface.get_simulation_state()

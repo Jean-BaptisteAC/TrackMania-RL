@@ -157,9 +157,6 @@ class TrackmaniaEnv(Env):
         if update_done is not None:
             done = update_done
 
-        # TEMPORARY: TESTING MINIMAL DISTANCE TO CENTERLINE
-        reward = self.compute_centerline_distance()
-
         return observation, reward, done, truncated, info
     
     def close(self):
@@ -193,6 +190,13 @@ class TrackmaniaEnv(Env):
 
         # Check for exit of the track
         if self.position[1] < 9.2:
+            done = True
+            special_reward = -20
+            info["total_distance"] = self.total_distance
+            self.reset()
+
+        # Check for distance from centerline 
+        if self.compute_centerline_distance() > 50:
             done = True
             special_reward = -20
             info["total_distance"] = self.total_distance

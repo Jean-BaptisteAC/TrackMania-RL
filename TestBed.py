@@ -63,6 +63,9 @@ class TestBed:
             SB3_arguments["policy_kwargs"] = kwargs["policy_kwargs"]
         if "learning_rate" in kwargs:
             SB3_arguments["learning_rate"] = kwargs["learning_rate"]
+        if "buffer_size" in kwargs:
+            SB3_arguments["buffer_size"] = kwargs["buffer_size"]
+        
         if "seed" in kwargs:
             SB3_arguments["seed"] = kwargs["seed"]
         else:

@@ -131,8 +131,8 @@ if __name__ == "__main__":
 
     """ TRAIN AGENT """
 
-    algorithm = "PPO"
-    model_name = "PPO_Training_dataset_TEST"
+    algorithm = "SAC"
+    model_name = "SAC_Training_dataset_TEST"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
@@ -140,6 +140,7 @@ if __name__ == "__main__":
         features_extractor_kwargs=dict(features_dim=64),
     )   
     seed=0
+    buffer_size = 100_000
 
     testbed = TestBed(algorithm=algorithm,
                       policy=CustomActorCriticPolicy,
@@ -147,6 +148,7 @@ if __name__ == "__main__":
                       parameters_dict=parameters_dict, 
                       save_interval=save_interval,
                       policy_kwargs=policy_kwargs, 
+                      buffer_size = buffer_size,
                       seed=seed)
     
     # agent_path = "models/PPO/PPO_Easy_jump_w/_Checkpoint/200k"
