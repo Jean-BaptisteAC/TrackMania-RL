@@ -19,7 +19,7 @@ import torch
  
 ArrowsActionSpace = MultiBinary(4,)
 ControllerActionSpace = Box(
-    low=np.array([-1.0, -1.0]), high=np.array([1.0, 1.0]), shape=(2,), dtype=np.float32
+    low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
 )
 ActType = TypeVar("ActType")
 ObsType = TypeVar("ObsType")
@@ -28,7 +28,7 @@ class TrackmaniaEnv(Env):
     def __init__(
         self,
         observation_space: str = "image",
-        dimension_reduction: int = 8
+        dimension_reduction: int = 6
     ):
         self.action_space = ControllerActionSpace
 

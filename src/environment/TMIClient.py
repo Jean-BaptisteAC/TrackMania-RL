@@ -15,7 +15,7 @@ class CustomClient(Client):
     def __init__(self):
         super().__init__()
         self.sim_state = None
-        self.action = [0, 0]
+        self.action = [0, 0, 0]
         self.last_action_timer = 0
 
         self.time = None
@@ -56,16 +56,18 @@ class CustomClient(Client):
         self.sim_state = iface.get_simulation_state()
 
         current_action = {
-            'sim_clear_buffer': True,
-            "steer":          int(np.clip(self.action[1]*65536, -65536, 65536)),  
-            "gas":            int(np.clip(-self.action[0]*65536, -65536, 65536)),   
+            'sim_clear_buffer': True,  
+            "steer":           int(np.clip(self.action[0]*65536, -65536, 65536)),
+            "accelerate":      self.action[1] > 0.5, 
+            "brake" :          self.action[2] > 0.5
             }
         
         if self.sim_state.race_time - self.last_action_timer > 1_000:
             current_action = {
                 'sim_clear_buffer': True,
-                "steer":         0 ,  
-                "gas":           0 ,   
+                "steer":           0,
+                "accelerate":      False, 
+                "brake" :          False
                 }
             self.restart_idle = True
 

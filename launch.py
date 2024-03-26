@@ -8,7 +8,7 @@ if __name__ == "__main__":
     i = 0
     while True:
         
-        action = [0, 0]
+        action = [np.random.normal(), 0.6, 0.6]
         new_observation, reward, done, truncated, info = env.step(action)
 
         if i == 5:
@@ -26,6 +26,6 @@ if __name__ == "__main__":
             pass
 
 
-    action = np.array([0, 0])
+    action = np.array([0, 0, 0])
     env.step(action)
     env.close()
