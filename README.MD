@@ -7,4 +7,5 @@
     - Refactoring of the code
     - Implementation of rt-gym
     - Seperate throttle and brake
+    - Adapt the code for off-policy algorithms (SAC and TD3)
     - Handle multiple instances of TMNF to gather data faster
