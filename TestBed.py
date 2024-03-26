@@ -77,10 +77,12 @@ class TestBed:
         self.logdir = "logs"
         if not os.path.exists(self.logdir):
             os.makedirs(self.logdir)
+
+        if self.algorithm == "PPO":
+            SB3_arguments["n_step"] = 6144
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
-                                             n_steps=6144,
                                              verbose=1,
                                              tensorboard_log=self.logdir,
                                              **SB3_arguments)

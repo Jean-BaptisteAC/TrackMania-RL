@@ -131,23 +131,27 @@ if __name__ == "__main__":
 
     """ TRAIN AGENT """
 
-    algorithm = "PPO"
-    model_name = "PPO_Training_dataset_zero_cp_speed"
+    algorithm = "SAC"
+    model_name = "SAC_TEST"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
-        features_extractor_kwargs=dict(features_dim=64),
+        features_extractor_kwargs=dict(features_dim=128),
+        activation_fn=th.nn.ReLU, 
+        net_arch=[128, 128],
     )   
     seed=0
+    buffer_size = 50_000
 
     testbed = TestBed(algorithm=algorithm,
-                      policy=CustomActorCriticPolicy,
+                      policy="MultiInputPolicy",
                       model_name=model_name, 
                       parameters_dict=parameters_dict, 
                       save_interval=save_interval,
                       policy_kwargs=policy_kwargs, 
-                      seed=seed)
+                      seed=seed,
+                      buffer_size=50_000)
     
     # agent_path = "models/PPO/PPO_Easy_jump_w/_Checkpoint/200k"
     # testbed.load_agent(model_path=agent_path, step=200_000)
