@@ -79,6 +79,7 @@ class TrackmaniaEnv(Env):
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
         # for state in self.save_states:
         #     state.dyna.current_state.linear_speed = np.array([0, 0, 0])
+        self.client.train_state = self.save_states[0]
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -115,7 +116,7 @@ class TrackmaniaEnv(Env):
         info = {}
 
         self.total_distance = 0
-        self.last_reset_time_step = self.state.race_time
+        self.last_reset_time_step = 0
         
         return observation, info
 
@@ -123,6 +124,7 @@ class TrackmaniaEnv(Env):
 
         self.client.action = action
         self.client.reset_last_action_timer()
+        self.last_reset_time_step += 1
         
         screen_observation, distance_observation = self.viewer.get_obs()
         # self.viewer.show()
@@ -204,7 +206,7 @@ class TrackmaniaEnv(Env):
             self.reset()
 
         # Check for complete stop of the car
-        if (self.race_time - self.last_reset_time_step) >= 1_000:
+        if self.last_reset_time_step >= 60:
             if self.velocity()[2] < 1:
                 done = True
                 special_reward = -20
