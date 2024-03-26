@@ -131,8 +131,8 @@ if __name__ == "__main__":
 
     """ TRAIN AGENT """
 
-    algorithm = "SAC"
-    model_name = "SAC_TEST"
+    algorithm = "PPO"
+    model_name = "PPO_Actions3"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
@@ -142,7 +142,8 @@ if __name__ == "__main__":
         net_arch=[128, 128],
     )   
     seed=0
-    buffer_size = 50_000
+    # buffer_size = 50_000
+    # train_freq  = (1_000, "step")
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
@@ -150,8 +151,7 @@ if __name__ == "__main__":
                       parameters_dict=parameters_dict, 
                       save_interval=save_interval,
                       policy_kwargs=policy_kwargs, 
-                      seed=seed,
-                      buffer_size=50_000)
+                      seed=seed)
     
     # agent_path = "models/PPO/PPO_Easy_jump_w/_Checkpoint/200k"
     # testbed.load_agent(model_path=agent_path, step=200_000)

@@ -65,7 +65,9 @@ class TestBed:
             SB3_arguments["learning_rate"] = kwargs["learning_rate"]
         if "buffer_size" in kwargs:
             SB3_arguments["buffer_size"] = kwargs["buffer_size"]
-        
+        if "train_freq" in kwargs:
+            SB3_arguments["train_freq"] = kwargs["train_freq"]
+
         if "seed" in kwargs:
             SB3_arguments["seed"] = kwargs["seed"]
         else:
@@ -79,7 +81,7 @@ class TestBed:
             os.makedirs(self.logdir)
 
         if self.algorithm == "PPO":
-            SB3_arguments["n_step"] = 6144
+            SB3_arguments["n_steps"] = 6144
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
