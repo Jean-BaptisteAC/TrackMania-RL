@@ -65,7 +65,6 @@ class TrackmaniaEnv(Env):
 
         self.train_steps = 3_000
         self.current_step = 0
-        self.mode = "train"
 
         self.last_reset_time_step = 0
 
@@ -102,13 +101,8 @@ class TrackmaniaEnv(Env):
 
     def reset(self, seed=0):
 
-        if self.mode == "train":
-            self.client.mode = "train"
-            state = random.choice(self.save_states)
-        else:
-            self.client.mode = "eval"
-            state = None
-        
+
+        state = random.choice(self.save_states)
         self.client.respawn(state)
         
         screen_observation, _ = self.viewer.get_obs()
@@ -156,33 +150,10 @@ class TrackmaniaEnv(Env):
         
         truncated = False
 
-        # update_done = self.update_env_mode(done)
-        # if update_done is not None:
-        #     done = update_done
-
         return observation, reward, done, truncated, info
     
     def close(self):
         self.interface.close()
-
-    def update_env_mode(self, done):
-        if self.mode == "train":
-            self.current_step += 1
-        
-            if self.current_step == self.train_steps:
-                self.mode = "eval"
-                print("current mode:", self.mode)
-                self.current_step = 0
-                self.reset()
-                return True
-  
-        elif self.mode == "eval" and done:
-            self.mode = "train"
-            print("current mode:", self.mode)
-            self.reset()
-            return True
-        
-        return None
         
 
     def check_state(self):
@@ -241,10 +212,6 @@ class TrackmaniaEnv(Env):
         if self.client.restart_idle:
             done = True
             self.reset()
-
-        if self.mode == "train":
-            info["checkpoint_time"] = False
-            info["total_distance"] = False
         
         return special_reward, done, info
     

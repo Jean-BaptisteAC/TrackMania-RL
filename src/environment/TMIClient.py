@@ -28,7 +28,6 @@ class CustomClient(Client):
 
         self.restart_idle = True
 
-        self.mode = "train"
         self.train_state = None
         
     def on_registered(self, iface: TMInterface) -> None:
@@ -46,11 +45,7 @@ class CustomClient(Client):
 
         elif self.is_respawn and self.init_state:
 
-            if self.mode == "eval":
-                iface.rewind_to_state(self.init_state)
-            elif self.mode == "train":
-                iface.rewind_to_state(self.train_state)
-            
+            iface.rewind_to_state(self.train_state)
             self.is_respawn = False
 
         self.sim_state = iface.get_simulation_state()
@@ -78,9 +73,9 @@ class CustomClient(Client):
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
         if current >= 1:
-            # self.passed_checkpoint = True
 
             if current == target:
+                self.passed_checkpoint = True
                 iface.prevent_simulation_finish()
                 self.time = self.sim_state.race_time/1000 # race time is in milliseconds
                 self.is_finish = True
