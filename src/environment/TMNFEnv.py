@@ -12,6 +12,9 @@ from .utils.GameCapture import Lidar_Vision, Image_Vision
 
 from tminterface.interface import TMInterface
 
+from scipy.interpolate import interp1d
+from scipy.signal import argrelmin
+
 import torch
  
 ArrowsActionSpace = MultiBinary(4,)
@@ -67,11 +70,27 @@ class TrackmaniaEnv(Env):
 
         self.last_reset_time_step = 0
 
+        self.init_centerline()
+
+    def init_centerline(self):
+
+        # init save_states for respawn
         run_folder = "track_data/Training_dataset_tech/run-2"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
         for state in self.save_states:
             state.dyna.current_state.linear_speed = np.array([0, 0, 0])
+
+        # init centerline
+        positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
+        raw_points = [list(pos['position'].to_numpy()) for pos in positions]
+        points = [raw_points[0]]
+        for point in raw_points[1:]:
+            if point != points[-1]:
+                points.append(point)
+
+        points = np.array(points)
+
 
     def reset(self, seed=0):
 
