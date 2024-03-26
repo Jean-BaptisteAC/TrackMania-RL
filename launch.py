@@ -11,13 +11,8 @@ if __name__ == "__main__":
         action = [0, 0]
         new_observation, reward, done, truncated, info = env.step(action)
 
-        # if info["total_distance"] is not False:
-        #     print(info["total_distance"])
-
-        i += 1
-        if i == 5:
-            print(reward)
-            i = 0
+        if info["total_distance"] is not False:
+            print(info["total_distance"])
 
         try:
             if keyboard.is_pressed("q"):

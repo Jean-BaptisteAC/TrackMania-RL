@@ -65,9 +65,13 @@ class TrackmaniaEnv(Env):
         self.current_step = 0
         self.mode = "train"
 
-        run_folder = "track_data/Training_dataset_tech/run-1"
+        self.last_reset_time_step = 0
+
+        run_folder = "track_data/Training_dataset_tech/run-2"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
+        for state in self.save_states:
+            state.dyna.current_state.linear_speed = np.array([0, 0, 0])
 
     def reset(self, seed=0):
 
@@ -85,6 +89,7 @@ class TrackmaniaEnv(Env):
         info = {}
 
         self.total_distance = 0
+        self.last_reset_time_step = self.state.race_time
         
         return observation, info
 
@@ -165,7 +170,7 @@ class TrackmaniaEnv(Env):
             self.reset()
 
         # Check for complete stop of the car
-        if self.race_time >= 1_000:
+        if (self.race_time - self.last_reset_time_step) >= 1_000:
             if self.velocity()[2] < 1:
                 done = True
                 special_reward = -20
