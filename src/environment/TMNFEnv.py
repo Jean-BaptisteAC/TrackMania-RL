@@ -24,7 +24,6 @@ ControllerActionSpace = Box(
 ActType = TypeVar("ActType")
 ObsType = TypeVar("ObsType")
 
-
 class TrackmaniaEnv(Env):
     def __init__(
         self,
@@ -91,6 +90,14 @@ class TrackmaniaEnv(Env):
 
         points = np.array(points)
 
+        # Linear length along the line:
+        distance = np.cumsum( np.sqrt(np.sum( np.diff(points, axis=0)**2, axis=1 )))
+        distance = np.insert(distance, 0, 0)/distance[-1]
+
+        interpolator =  interp1d(distance, points, kind='linear', axis=0)
+        alpha = np.linspace(0, 1, 1000)
+        self.centerline = interpolator(alpha)
+
 
     def reset(self, seed=0):
 
@@ -149,6 +156,9 @@ class TrackmaniaEnv(Env):
         update_done = self.update_env_mode(done)
         if update_done is not None:
             done = update_done
+
+        # TEMPORARY: TESTING MINIMAL DISTANCE TO CENTERLINE
+        reward = self.compute_centerline_distance()
 
         return observation, reward, done, truncated, info
     
@@ -290,3 +300,28 @@ class TrackmaniaEnv(Env):
     @property
     def race_time(self):
         return self.state.race_time
+    
+    def distance_3D(self, x, y, z, x0, y0, z0):
+        d_x = x - x0
+        d_y = y - y0
+        d_z = z - z0
+        dis = np.sqrt( d_x**2 + d_y**2 + d_z**2)
+        return dis
+    
+    def compute_centerline_distance(self):
+        x = self.centerline[:,0]
+        y = self.centerline[:,1]
+        z = self.centerline[:,2]
+
+        current_position = list(self.state.dyna.current_state.position.to_numpy())
+
+        # compute distance
+        dis = self.distance_3D(x, y, z, current_position[0], current_position[1], current_position[2])
+        # find the minima
+        min_idxs = argrelmin(dis)[0]
+        # take the minimum
+        glob_min_idx = min_idxs[np.argmin(dis[min_idxs])]
+
+        # minimal distance to centerline
+        min_d = dis[glob_min_idx]
+        return min_d
