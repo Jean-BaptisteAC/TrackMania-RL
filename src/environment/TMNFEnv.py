@@ -46,7 +46,7 @@ class TrackmaniaEnv(Env):
             obs, _ = self.viewer.get_obs()
             image_shape = obs.shape
             self.observation_space = Dict(
-                {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
+                {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
                  "physics": Box(low=-1.0, high=1.0, shape=(6, ), dtype=np.float64)}
             )
 
