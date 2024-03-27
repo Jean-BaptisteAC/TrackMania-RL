@@ -67,7 +67,7 @@ class CustomClient(Client):
             self.restart_idle = True
 
 
-        # iface.set_input_state(**current_action)
+        iface.set_input_state(**current_action)
        
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):

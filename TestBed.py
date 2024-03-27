@@ -81,7 +81,7 @@ class TestBed:
             os.makedirs(self.logdir)
 
         if self.algorithm == "PPO":
-            SB3_arguments["n_steps"] = 6144
+            SB3_arguments["n_steps"] = 5_000
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
