@@ -167,12 +167,13 @@ class TrackmaniaEnv(Env):
             info["total_distance"] = self.total_distance
             self.reset()
 
-        # Check for distance from centerline 
-        if self.compute_centerline_distance() > 50:
-            done = True
-            special_reward = -20
-            info["total_distance"] = self.total_distance
-            self.reset()
+        # # Check for distance from centerline 
+        # if self.compute_centerline_distance() > 50:
+        #     done = True
+        #     special_reward = -20
+        #     info["total_distance"] = self.total_distance
+        #     print("out_of_centerline")
+        #     self.reset()
 
         # Check for complete stop of the car
         if self.last_reset_time_step >= 60:
@@ -200,9 +201,8 @@ class TrackmaniaEnv(Env):
             self.reset()
             
         # Time out when max episode duration is reached
-        if self.race_time >= self.max_race_time :
+        if self.last_reset_time_step >= 1000 :
             done = True
-            special_reward = -20
             info["total_distance"] = self.total_distance
             self.reset()
 

@@ -9,14 +9,14 @@ if __name__ == "__main__":
     while True:
         
         action = [np.random.normal(), 0.6, 0.6]
+        action = [0, 0, 0]
         new_observation, reward, done, truncated, info = env.step(action)
 
         if i == 5:
-            print(reward)
+            # print(reward)
             i = 0
 
         i += 1
-
 
         try:
             if keyboard.is_pressed("q"):
@@ -24,7 +24,6 @@ if __name__ == "__main__":
                 break
         except:
             pass
-
 
     action = np.array([0, 0, 0])
     env.step(action)
