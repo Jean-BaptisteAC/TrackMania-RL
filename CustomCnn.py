@@ -1,13 +1,11 @@
-from typing import Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Callable, Tuple
 
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from stable_baselines3 import PPO
 from gymnasium import spaces
 import torch as th
 from torch import nn
 
-from src.environment.TMNFEnv import TrackmaniaEnv
 from TestBed import TestBed
 
 # Simple CNN taken from the SB3 custom Policy example
@@ -134,17 +132,21 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Soft_Speed_Cap"
+    model_name = "PPO_Actions3"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 10_000
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
-        features_extractor_kwargs=dict(features_dim=64),
+        features_extractor_kwargs=dict(features_dim=128),
+        activation_fn=th.nn.ReLU, 
+        net_arch=[128, 128],
     )   
     seed=0
+    # buffer_size = 50_000
+    # train_freq  = (1_000, "step")
 
     testbed = TestBed(algorithm=algorithm,
-                      policy=CustomActorCriticPolicy,
+                      policy="MultiInputPolicy",
                       model_name=model_name, 
                       parameters_dict=parameters_dict, 
                       save_interval=save_interval,

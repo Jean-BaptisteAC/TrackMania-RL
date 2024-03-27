@@ -15,10 +15,11 @@ def return_model(algorithm):
     if algorithm == "TD3":
         return TD3
     
-class TimeRecordingCallback(BaseCallback):
+class RecordingCallback(BaseCallback):
     def __init__(self, verbose=0):
         super().__init__(verbose)
         self.time_recording = []
+        self.distance_recording = []
 
     def _on_step(self) -> bool:
         value = self.locals['infos'][0]["checkpoint_time"]
@@ -32,6 +33,19 @@ class TimeRecordingCallback(BaseCallback):
                 self.logger.record("lap_time_mean", recorded_value)
                 self.logger.dump(self.num_timesteps)
             self.time_recording = []
+
+        value = self.locals['infos'][0]["total_distance"]
+
+        if value is not False:
+            self.distance_recording.append(value)
+        
+        if self.num_timesteps % 2000 == 0:
+            if len(self.distance_recording) >= 1:
+                recorded_value = np.array(self.distance_recording).mean()
+                self.logger.record("total_distance_mean", recorded_value)
+                self.logger.dump(self.num_timesteps)
+            self.distance_recording = []
+
         return True
     
 class TestBed:
@@ -49,6 +63,11 @@ class TestBed:
             SB3_arguments["policy_kwargs"] = kwargs["policy_kwargs"]
         if "learning_rate" in kwargs:
             SB3_arguments["learning_rate"] = kwargs["learning_rate"]
+        if "buffer_size" in kwargs:
+            SB3_arguments["buffer_size"] = kwargs["buffer_size"]
+        if "train_freq" in kwargs:
+            SB3_arguments["train_freq"] = kwargs["train_freq"]
+
         if "seed" in kwargs:
             SB3_arguments["seed"] = kwargs["seed"]
         else:
@@ -60,10 +79,12 @@ class TestBed:
         self.logdir = "logs"
         if not os.path.exists(self.logdir):
             os.makedirs(self.logdir)
+
+        if self.algorithm == "PPO":
+            SB3_arguments["n_steps"] = 6144
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
-                                             n_steps=6144,
                                              verbose=1,
                                              tensorboard_log=self.logdir,
                                              **SB3_arguments)
@@ -91,7 +112,7 @@ class TestBed:
                             reset_num_timesteps=False, 
                             log_interval = 1,
                             tb_log_name=self.model_name, 
-                            callback=TimeRecordingCallback())
+                            callback=RecordingCallback())
 
             self.step += self.save_interval
 

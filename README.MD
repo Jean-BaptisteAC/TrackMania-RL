@@ -6,5 +6,5 @@
 
     - Refactoring of the code
     - Implementation of rt-gym
-    - Checkpoint restart procedure
+    - Add Wandb implementation
     - Handle multiple instances of TMNF to gather data faster

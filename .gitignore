@@ -5,3 +5,5 @@ models/*
 
 .venv_*
 .env
+
+track_data/*

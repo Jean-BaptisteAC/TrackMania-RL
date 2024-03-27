@@ -15,7 +15,7 @@ class CustomClient(Client):
     def __init__(self):
         super().__init__()
         self.sim_state = None
-        self.action = [0, 0]
+        self.action = [0, 0, 0]
         self.last_action_timer = 0
 
         self.time = None
@@ -27,6 +27,8 @@ class CustomClient(Client):
         self.is_finish = False
 
         self.restart_idle = True
+
+        self.train_state = None
         
     def on_registered(self, iface: TMInterface) -> None:
         print(f'Registered to {iface.server_name}')
@@ -42,22 +44,25 @@ class CustomClient(Client):
             self.time = None
 
         elif self.is_respawn and self.init_state:
-            iface.rewind_to_state(self.init_state)
+
+            iface.rewind_to_state(self.train_state)
             self.is_respawn = False
 
         self.sim_state = iface.get_simulation_state()
 
         current_action = {
-            'sim_clear_buffer': True,
-            "steer":          int(np.clip(self.action[1]*65536, -65536, 65536)),  
-            "gas":            int(np.clip(-self.action[0]*65536, -65536, 65536)),   
+            'sim_clear_buffer': True,  
+            "steer":           int(np.clip(self.action[0]*65536, -65536, 65536)),
+            "accelerate":      self.action[1] > 0.5, 
+            "brake" :          self.action[2] > 0.5
             }
         
         if self.sim_state.race_time - self.last_action_timer > 1_000:
             current_action = {
                 'sim_clear_buffer': True,
-                "steer":         0 ,  
-                "gas":           0 ,   
+                "steer":           0,
+                "accelerate":      False, 
+                "brake" :          False
                 }
             self.restart_idle = True
 
@@ -68,17 +73,18 @@ class CustomClient(Client):
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
         if current >= 1:
-            self.passed_checkpoint = True
 
             if current == target:
+                self.passed_checkpoint = True
                 iface.prevent_simulation_finish()
                 self.time = self.sim_state.race_time/1000 # race time is in milliseconds
                 self.is_finish = True
 
-    def respawn(self):
+    def respawn(self, state):
         self.is_respawn = True 
         self.passed_checkpoint = False
         self.is_finish = False
+        self.train_state = state
 
     def reset_last_action_timer(self):
         self.last_action_timer = self.sim_state.race_time
