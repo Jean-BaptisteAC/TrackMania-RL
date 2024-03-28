@@ -115,7 +115,6 @@ class TrackmaniaEnv(Env):
     def step(self, action):
 
         self.client.action = action
-        self.client.reset_last_action_timer()
         self.last_reset_time_step += 1
         
         screen_observation, distance_observation = self.viewer.get_obs()
@@ -147,6 +146,8 @@ class TrackmaniaEnv(Env):
             reward = special_reward
         
         truncated = False
+
+        self.client.reset_last_action_timer()
 
         return observation, reward, done, truncated, info
     

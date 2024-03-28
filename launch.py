@@ -1,6 +1,7 @@
 from src.environment.TMNFEnv import TrackmaniaEnv
 import numpy as np
 import keyboard
+import time
 
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", dimension_reduction=6)
@@ -15,6 +16,8 @@ if __name__ == "__main__":
         if done:
             print(i)
             i += 1
+
+        time.sleep(1)
 
         try:
             if keyboard.is_pressed("q"):

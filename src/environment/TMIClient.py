@@ -47,7 +47,7 @@ class CustomClient(Client):
             "brake" :          self.action[2] > 0.5
             }
         
-        if self.last_action_step > 600:
+        if self.last_action_step >= 100:
             current_action = {
                 'sim_clear_buffer': True,
                 "steer":           0,
@@ -59,7 +59,6 @@ class CustomClient(Client):
         iface.set_input_state(**current_action)
 
         self.last_action_step += 1
-       
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
