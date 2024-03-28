@@ -17,8 +17,6 @@ if __name__ == "__main__":
             print(i)
             i += 1
 
-        time.sleep(1)
-
         try:
             if keyboard.is_pressed("q"):
                 print("Interrupt")
