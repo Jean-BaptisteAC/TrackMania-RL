@@ -14,7 +14,7 @@ if __name__ == "__main__":
         new_observation, reward, done, truncated, info = env.step(action)
 
         if done:
-            print(i)
+            # print(i)
             i += 1
 
         try:

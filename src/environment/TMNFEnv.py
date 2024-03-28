@@ -47,7 +47,7 @@ class TrackmaniaEnv(Env):
             image_shape = obs.shape
             self.observation_space = Dict(
                 {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(6, ), dtype=np.float64)}
+                 "physics": Box(low=-1.0, high=1.0, shape=(7, ), dtype=np.float64)}
             )
 
         self.interface = TMInterface()
@@ -164,7 +164,7 @@ class TrackmaniaEnv(Env):
         # Check for exit of the track
         if self.position[1] < 9.2:
             done = True
-            special_reward = -20
+            special_reward = -10
             info["total_distance"] = self.total_distance
             self.reset()
 
@@ -180,13 +180,13 @@ class TrackmaniaEnv(Env):
         if self.last_reset_time_step >= 60:
             if self.velocity()[2] < 1:
                 done = True
-                special_reward = -20
+                special_reward = -10
                 info["total_distance"] = self.total_distance
                 self.reset()
 
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:
-            special_reward = 100
+            # special_reward = 100
             self.client.passed_checkpoint = False
             if self.client.is_finish:
                 done = True    
@@ -197,7 +197,7 @@ class TrackmaniaEnv(Env):
         # Check for contact with barriers in lidar mode
         if self.viewer.touch_boarder():
             done = True
-            special_reward = -20
+            special_reward = -10
             info["total_distance"] = self.total_distance
             self.reset()
             
@@ -249,12 +249,15 @@ class TrackmaniaEnv(Env):
 
         ground_contact = self.has_ground_contact()
 
-        return np.array([forward_speed, 
-                         lateral_speed, 
-                         pitch_angle, 
+        lateral_contact = float(self.state.scene_mobil.has_any_lateral_contact)
+
+        return np.array([forward_speed,
+                         lateral_speed,
+                         pitch_angle,
                          roll_angle,
-                         turning_rate, 
-                         ground_contact])
+                         turning_rate,
+                         ground_contact,
+                         lateral_contact])
 
     def has_ground_contact(self):
         for wheel in self.state.simulation_wheels:
