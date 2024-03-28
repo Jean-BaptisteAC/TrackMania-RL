@@ -166,6 +166,7 @@ class TrackmaniaEnv(Env):
             special_reward = -20
             info["total_distance"] = self.total_distance
             self.reset()
+            print("exit_track")
 
         # # Check for distance from centerline 
         # if self.compute_centerline_distance() > 50:
@@ -182,6 +183,7 @@ class TrackmaniaEnv(Env):
                 special_reward = -20
                 info["total_distance"] = self.total_distance
                 self.reset()
+                print("velocity=zero")
 
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:
@@ -192,6 +194,7 @@ class TrackmaniaEnv(Env):
                 info["checkpoint_time"] = self.client.time
                 info["total_distance"] = self.total_distance
                 self.reset()
+                print("checkpoint")
 
         # Check for contact with barriers in lidar mode
         if self.viewer.touch_boarder():
@@ -199,17 +202,20 @@ class TrackmaniaEnv(Env):
             special_reward = -20
             info["total_distance"] = self.total_distance
             self.reset()
+            print("tourch_boarder")
             
         # Time out when max episode duration is reached
-        if self.last_reset_time_step >= 1000 :
+        if self.last_reset_time_step >= 3_000 :
             done = True
             info["total_distance"] = self.total_distance
             self.reset()
+            print("time_out")
 
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
             done = True
             self.reset()
+            print("idle")
         
         return special_reward, done, info
     

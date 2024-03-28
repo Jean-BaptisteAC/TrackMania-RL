@@ -89,7 +89,7 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs, 
                       seed=seed)
     
-    # agent_path = "models/PPO/PPO_Training_Flat_Dataset/380k"
-    # testbed.load_agent(model_path=agent_path, step=380_000)
+    agent_path = "models/PPO/PPO_Training_Flat_Dataset/390k"
+    testbed.load_agent(model_path=agent_path, step=390_000)
     
     testbed.train(800_000)

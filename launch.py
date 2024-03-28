@@ -12,11 +12,9 @@ if __name__ == "__main__":
         action = [0, 0, 0]
         new_observation, reward, done, truncated, info = env.step(action)
 
-        if i == 5:
-            # print(reward)
-            i = 0
-
-        i += 1
+        if done:
+            print(i)
+            i += 1
 
         try:
             if keyboard.is_pressed("q"):
