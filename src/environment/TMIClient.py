@@ -24,7 +24,7 @@ class CustomClient(Client):
         self.is_finish = False
 
         self.restart_idle = True
-        self.is_init = False
+        self.is_idle = False
 
         self.train_state = None
         
@@ -33,8 +33,7 @@ class CustomClient(Client):
 
     def on_run_step(self, iface, _time: int):
 
-        if self.is_respawn :
-
+        if self.is_respawn and _time >= 0:
             iface.rewind_to_state(self.train_state)
             self.is_respawn = False
 
@@ -55,6 +54,10 @@ class CustomClient(Client):
                 "brake" :          False
                 }
             self.restart_idle = True
+            
+            if self.is_idle is False:
+                self.is_idle = True
+                iface.execute_command("press delete")
 
         iface.set_input_state(**current_action)
 
@@ -79,6 +82,7 @@ class CustomClient(Client):
     def reset_last_action_timer(self):
         self.last_action_step = 0
         self.restart_idle = False
+        self.is_idle = False
 
 if __name__ == "__main__":
     

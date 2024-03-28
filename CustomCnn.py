@@ -67,10 +67,9 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Training_Flat_Dataset"
+    model_name = "PPO_Training_Flat_Dataset_env_fix"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
-    # save_interval = 12_288
-    save_interval = 10_000
+    save_interval = 12_288
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
         features_extractor_kwargs=dict(features_dim=128),
@@ -89,7 +88,7 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs, 
                       seed=seed)
     
-    agent_path = "models/PPO/PPO_Training_Flat_Dataset/390k"
-    testbed.load_agent(model_path=agent_path, step=390_000)
+    # agent_path = "models/PPO/PPO_Training_Flat_Dataset/390k"
+    # testbed.load_agent(model_path=agent_path, step=390_000)
     
-    testbed.train(800_000)
+    testbed.train(1_000_000)
