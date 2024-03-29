@@ -149,6 +149,8 @@ class TrackmaniaEnv(Env):
 
         self.client.reset_last_action_timer()
 
+        reward = np.clip(reward, -10, 10)
+
         return observation, reward, done, truncated, info
     
     def close(self):

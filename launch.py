@@ -13,14 +13,10 @@ if __name__ == "__main__":
         action = [0, 0, 0]
         new_observation, reward, done, truncated, info = env.step(action)
 
-        if done:
-            i += 1
-            print(i)
-
-        if i == 10:
-            print("idle simulation")
-            time.sleep(1.2)
+        if i ==2:
+            print(reward)
             i = 0
+        i += 1
 
         try:
             if keyboard.is_pressed("q"):

@@ -77,6 +77,7 @@ if __name__ == "__main__":
         net_arch=[128, 128],
     )   
     seed=0
+    learning_rate = 1e-4
     # buffer_size = 50_000
     # train_freq  = (1_000, "step")
 
@@ -86,9 +87,10 @@ if __name__ == "__main__":
                       parameters_dict=parameters_dict, 
                       save_interval=save_interval,
                       policy_kwargs=policy_kwargs, 
-                      seed=seed)
+                      seed=seed, 
+                      learning_rate=learning_rate)
     
-    # agent_path = "models/PPO/PPO_Training_Flat_Dataset/390k"
-    # testbed.load_agent(model_path=agent_path, step=390_000)
+    agent_path = "models/PPO/PPO_Training_Flat_Dataset_env_fix/454k"
+    testbed.load_agent(model_path=agent_path, step=454_000)
     
     testbed.train(1_000_000)
