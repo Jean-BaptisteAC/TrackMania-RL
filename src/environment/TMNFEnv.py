@@ -25,10 +25,23 @@ ActType = TypeVar("ActType")
 ObsType = TypeVar("ObsType")
 
 class TrackmaniaEnv(Env):
+    """ Environment able to interact with Trackmania Nations Forever. 
+    It purpose is to get game data, process them to feed the agent. It receives the agent's action and send it to the game.
+    Meanwhile, it computes the reward.
+    
+    Args:
+        observation_space (str): Type of observation space. Default is "image".
+        dimension_reduction (int): Dimension reduction factor for the image observation space. Default is 6.
+        render_mode (str): Mode for rendering the game. Default is None.
+            - None: No rendering
+            - "human": Rendering in a window
+    
+    """
     def __init__(
         self,
         observation_space: str = "image",
-        dimension_reduction: int = 6
+        dimension_reduction: int = 6,
+        render_mode: str | None = None,
     ):
         self.action_space = ControllerActionSpace
 
@@ -67,6 +80,8 @@ class TrackmaniaEnv(Env):
         self.current_step = 0
 
         self.last_reset_time_step = 0
+        
+        self.render_mode = render_mode
 
         self.init_centerline()
 
@@ -113,6 +128,10 @@ class TrackmaniaEnv(Env):
         self.last_reset_time_step = 0
         
         return observation, info
+    
+    def render(self):
+        if self.render_mode == "human":
+            self.viewer.show()
 
     def step(self, action):
 
@@ -121,7 +140,7 @@ class TrackmaniaEnv(Env):
         self.last_reset_time_step += 1
         
         screen_observation, distance_observation = self.viewer.get_obs()
-        # self.viewer.show()
+        self.render()
         observation = self.observation(screen_observation)
 
         # Total distance in meters: (timestep in seconds) x (velocity in meters per second)
