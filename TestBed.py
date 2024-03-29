@@ -95,9 +95,11 @@ class TestBed:
     
         self.step = 0
         
-    def load_agent(self, model_path, step):
+    def load_agent(self, model_path, step, parameters_to_change):
         self.baseline = model_path
-        self.model = return_model(self.algorithm).load(model_path, env=self.env)
+        self.model = return_model(self.algorithm).load(model_path, 
+                                                       env=self.env, 
+                                                       custom_objects=parameters_to_change)
         self.step = step
         self.total_timestep = step
         

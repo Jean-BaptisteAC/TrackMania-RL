@@ -67,7 +67,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Training_Flat_Dataset_env_fix"
+    model_name = "PPO_Training_Flat_Dataset_lr_1e-4"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
     save_interval = 12_288
     policy_kwargs = dict(
@@ -77,20 +77,21 @@ if __name__ == "__main__":
         net_arch=[128, 128],
     )   
     seed=0
-    learning_rate = 1e-4
+    learning_rate = 1e-5
     # buffer_size = 50_000
     # train_freq  = (1_000, "step")
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
-                      model_name=model_name, 
-                      parameters_dict=parameters_dict, 
+                      model_name=model_name,
+                      parameters_dict=parameters_dict,
                       save_interval=save_interval,
-                      policy_kwargs=policy_kwargs, 
-                      seed=seed, 
+                      policy_kwargs=policy_kwargs,
+                      seed=seed,
                       learning_rate=learning_rate)
     
-    agent_path = "models/PPO/PPO_Training_Flat_Dataset_env_fix/454k"
-    testbed.load_agent(model_path=agent_path, step=454_000)
-    
-    testbed.train(1_000_000)
+    agent_path = "models/PPO/PPO_Training_Flat_Dataset_lr_1e-4/601k"
+    parameters_to_change = {"learning_rate":1e-5}
+    testbed.load_agent(model_path=agent_path, step=601_000, parameters_to_change=parameters_to_change)
+
+    testbed.train(600_000)
