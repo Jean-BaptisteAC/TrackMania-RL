@@ -34,6 +34,16 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.Flatten(),
         )
 
+        self.nature_cnn = nn.Sequential(
+            nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+            nn.ReLU(),
+            nn.Flatten(),
+        )
+
         # Compute shape by doing one forward pass
         with th.no_grad():
             n_flatten = self.linesight_cnn(
@@ -52,89 +62,14 @@ class CNN_Extractor(BaseFeaturesExtractor):
         return embedding
 
 
-class CustomPolicyNetwork(nn.Module):
-    """
-    Custom network for policy and value function.
-    It receives as input the features extracted by the features extractor.
-
-    :param feature_dim: dimension of the features extracted with the features_extractor (e.g. features from a CNN)
-    :param last_layer_dim_pi: (int) number of units for the last layer of the policy network
-    :param last_layer_dim_vf: (int) number of units for the last layer of the value network
-    """
-    def __init__(
-        self,
-        feature_dim: int = 64,
-        last_layer_dim_pi: int = 128,
-        last_layer_dim_vf: int = 128
-    ):
-        super().__init__()
-        # IMPORTANT:
-        # Save output dimensions, used to create the distributions
-        self.hiddel_dim = 128
-        self.latent_dim_pi = last_layer_dim_pi
-        self.latent_dim_vf = last_layer_dim_vf
-
-        # Policy network
-        self.policy_net = nn.Sequential(
-            nn.Linear(feature_dim, self.hiddel_dim),
-            nn.ReLU(),
-            nn.Linear(self.hiddel_dim, self.latent_dim_pi), 
-        )
-
-        # Value network
-        self.value_net = nn.Sequential(
-            nn.Linear(feature_dim, self.hiddel_dim),
-            nn.ReLU(),
-            nn.Linear(self.hiddel_dim, self.latent_dim_vf), 
-        )
-
-    def forward(self, features: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
-        """
-        :return: (th.Tensor, th.Tensor) latent_policy, latent_value of the specified network.
-            If all layers are shared, then ``latent_policy == latent_value``
-
-            On that example only the CNN and its head is shared between actor and critic
-        """
-        return self.forward_actor(features), self.forward_critic(features)
-
-    def forward_actor(self, features: th.Tensor) -> th.Tensor:
-        return self.policy_net(features)
-
-    def forward_critic(self, features: th.Tensor) -> th.Tensor:
-        return self.value_net(features)
-
-class CustomActorCriticPolicy(ActorCriticPolicy):
-    def __init__(
-        self,
-        observation_space: spaces.Space,
-        action_space: spaces.Space,
-        lr_schedule: Callable[[float], float],
-        *args,
-        **kwargs,
-    ):
-        # Disable orthogonal initialization
-        kwargs["ortho_init"] = False
-        super().__init__(
-            observation_space,
-            action_space,
-            lr_schedule,
-            # Pass remaining arguments to base class
-            *args,
-            **kwargs,
-        )
-
-    def _build_mlp_extractor(self) -> None:
-        self.mlp_extractor = CustomPolicyNetwork()
-
-
 if __name__ == "__main__":
 
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Actions3"
+    model_name = "PPO_Training_Flat_Dataset_lr_1e-4"
     parameters_dict = {"observation_space":"image", "dimension_reduction":6}
-    save_interval = 10_000
+    save_interval = 12_288
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
         features_extractor_kwargs=dict(features_dim=128),
@@ -142,18 +77,21 @@ if __name__ == "__main__":
         net_arch=[128, 128],
     )   
     seed=0
+    learning_rate = 1e-5
     # buffer_size = 50_000
     # train_freq  = (1_000, "step")
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
-                      model_name=model_name, 
-                      parameters_dict=parameters_dict, 
+                      model_name=model_name,
+                      parameters_dict=parameters_dict,
                       save_interval=save_interval,
-                      policy_kwargs=policy_kwargs, 
-                      seed=seed)
+                      policy_kwargs=policy_kwargs,
+                      seed=seed,
+                      learning_rate=learning_rate)
     
-    # agent_path = "models/PPO/PPO_Easy_jump_w/_Checkpoint/200k"
-    # testbed.load_agent(model_path=agent_path, step=200_000)
-    
-    testbed.train(400_000)
+    agent_path = "models/PPO/PPO_Training_Flat_Dataset_lr_1e-4/601k"
+    parameters_to_change = {"learning_rate":1e-5}
+    testbed.load_agent(model_path=agent_path, step=601_000, parameters_to_change=parameters_to_change)
+
+    testbed.train(600_000)

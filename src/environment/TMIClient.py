@@ -16,17 +16,15 @@ class CustomClient(Client):
         super().__init__()
         self.sim_state = None
         self.action = [0, 0, 0]
-        self.last_action_timer = 0
+        self.last_action_step = 0
 
         self.time = None
-
-        self.is_init = False
-        self.init_state = None
         self.passed_checkpoint = False
-        self.is_respawn = True
+        self.is_respawn = False
         self.is_finish = False
 
         self.restart_idle = True
+        self.is_idle = False
 
         self.train_state = None
         
@@ -35,16 +33,7 @@ class CustomClient(Client):
 
     def on_run_step(self, iface, _time: int):
 
-        if _time == 0:
-            self.init_state = iface.get_simulation_state()
-
-        if not self.is_init:
-            iface.respawn()
-            self.is_init = True
-            self.time = None
-
-        elif self.is_respawn and self.init_state:
-
+        if self.is_respawn and _time >= 0:
             iface.rewind_to_state(self.train_state)
             self.is_respawn = False
 
@@ -57,7 +46,7 @@ class CustomClient(Client):
             "brake" :          self.action[2] > 0.5
             }
         
-        if self.sim_state.race_time - self.last_action_timer > 1_000:
+        if self.last_action_step >= 100:
             current_action = {
                 'sim_clear_buffer': True,
                 "steer":           0,
@@ -65,10 +54,14 @@ class CustomClient(Client):
                 "brake" :          False
                 }
             self.restart_idle = True
-
+            
+            if self.is_idle is False:
+                self.is_idle = True
+                iface.execute_command("press delete")
 
         iface.set_input_state(**current_action)
-       
+
+        self.last_action_step += 1
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
@@ -87,8 +80,9 @@ class CustomClient(Client):
         self.train_state = state
 
     def reset_last_action_timer(self):
-        self.last_action_timer = self.sim_state.race_time
+        self.last_action_step = 0
         self.restart_idle = False
+        self.is_idle = False
 
 if __name__ == "__main__":
     

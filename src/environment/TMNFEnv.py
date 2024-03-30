@@ -59,8 +59,8 @@ class TrackmaniaEnv(Env):
             obs, _ = self.viewer.get_obs()
             image_shape = obs.shape
             self.observation_space = Dict(
-                {"image": Box(low=0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(6, ), dtype=np.float64)}
+                {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
+                 "physics": Box(low=-1.0, high=1.0, shape=(7, ), dtype=np.float64)}
             )
 
         self.interface = TMInterface()
@@ -88,11 +88,9 @@ class TrackmaniaEnv(Env):
     def init_centerline(self):
 
         # init save_states for respawn
-        run_folder = "track_data/Training_dataset_tech/run-2"
+        run_folder = "track_data/Training_dataset_flat_tech/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
-        # for state in self.save_states:
-        #     state.dyna.current_state.linear_speed = np.array([0, 0, 0])
         self.client.train_state = self.save_states[0]
 
         # init centerline
@@ -136,7 +134,6 @@ class TrackmaniaEnv(Env):
     def step(self, action):
 
         self.client.action = action
-        self.client.reset_last_action_timer()
         self.last_reset_time_step += 1
         
         screen_observation, distance_observation = self.viewer.get_obs()
@@ -169,6 +166,10 @@ class TrackmaniaEnv(Env):
         
         truncated = False
 
+        self.client.reset_last_action_timer()
+
+        reward = np.clip(reward, -10, 10)
+
         return observation, reward, done, truncated, info
     
     def close(self):
@@ -184,28 +185,29 @@ class TrackmaniaEnv(Env):
         # Check for exit of the track
         if self.position[1] < 9.2:
             done = True
-            special_reward = -20
+            special_reward = -10
             info["total_distance"] = self.total_distance
             self.reset()
 
-        # Check for distance from centerline 
-        if self.compute_centerline_distance() > 50:
-            done = True
-            special_reward = -20
-            info["total_distance"] = self.total_distance
-            self.reset()
+        # # Check for distance from centerline 
+        # if self.compute_centerline_distance() > 50:
+        #     done = True
+        #     special_reward = -20
+        #     info["total_distance"] = self.total_distance
+        #     print("out_of_centerline")
+        #     self.reset()
 
         # Check for complete stop of the car
         if self.last_reset_time_step >= 60:
             if self.velocity()[2] < 1:
                 done = True
-                special_reward = -20
+                special_reward = -10
                 info["total_distance"] = self.total_distance
                 self.reset()
 
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:
-            special_reward = 100
+            # special_reward = 100
             self.client.passed_checkpoint = False
             if self.client.is_finish:
                 done = True    
@@ -216,14 +218,13 @@ class TrackmaniaEnv(Env):
         # Check for contact with barriers in lidar mode
         if self.viewer.touch_boarder():
             done = True
-            special_reward = -20
+            special_reward = -10
             info["total_distance"] = self.total_distance
             self.reset()
             
         # Time out when max episode duration is reached
-        if self.race_time >= self.max_race_time :
+        if self.last_reset_time_step >= 3_000 :
             done = True
-            special_reward = -20
             info["total_distance"] = self.total_distance
             self.reset()
 
@@ -269,12 +270,15 @@ class TrackmaniaEnv(Env):
 
         ground_contact = self.has_ground_contact()
 
-        return np.array([forward_speed, 
-                         lateral_speed, 
-                         pitch_angle, 
+        lateral_contact = float(self.state.scene_mobil.has_any_lateral_contact)
+
+        return np.array([forward_speed,
+                         lateral_speed,
+                         pitch_angle,
                          roll_angle,
-                         turning_rate, 
-                         ground_contact])
+                         turning_rate,
+                         ground_contact,
+                         lateral_contact])
 
     def has_ground_contact(self):
         for wheel in self.state.simulation_wheels:
