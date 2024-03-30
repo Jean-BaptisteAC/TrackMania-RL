@@ -183,7 +183,7 @@ class TrackmaniaEnv(Env):
     def check_state(self):
         special_reward = None 
         done = False
-        info = {"checkpoint_time":False, 
+        info = {"checkpoint_time":False,
                 "total_distance":False}
 
         # Check for exit of the track
@@ -227,10 +227,11 @@ class TrackmaniaEnv(Env):
             self.reset()
             
         # Time out when max episode duration is reached
-        if self.last_reset_time_step >= 3_000 :
-            done = True
-            info["total_distance"] = self.total_distance
-            self.reset()
+        if self.training_track is not None:
+            if self.last_reset_time_step >= 3_000 :
+                done = True
+                info["total_distance"] = self.total_distance
+                self.reset()
 
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
