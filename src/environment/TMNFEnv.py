@@ -39,7 +39,7 @@ class TrackmaniaEnv(Env):
         self,
         observation_space: str = "image",
         dimension_reduction: int = 6,
-        training_track: str = "Training_dataset_flat_tech",
+        training_track: str | None = None,
         render_mode: str | None = None,
     ):
         self.action_space = ControllerActionSpace
@@ -84,7 +84,8 @@ class TrackmaniaEnv(Env):
         
         self.render_mode = render_mode
 
-        self.init_centerline()
+        if self.training_track is not None:
+            self.init_centerline()
 
     def init_centerline(self):
 
@@ -115,8 +116,10 @@ class TrackmaniaEnv(Env):
 
     def reset(self, seed=0):
 
-
-        state = random.choice(self.save_states)
+        if self.training_track is not None:
+            state = random.choice(self.save_states)
+        else:
+            state = None
         self.client.respawn(state)
         
         screen_observation, _ = self.viewer.get_obs()

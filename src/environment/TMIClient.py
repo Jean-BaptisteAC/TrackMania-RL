@@ -1,6 +1,5 @@
 import time
 import numpy as np
-from threading import Lock, Thread
 
 from tminterface.client import Client
 from tminterface.interface import TMInterface
@@ -26,15 +25,20 @@ class CustomClient(Client):
         self.restart_idle = True
         self.is_idle = False
 
-        self.train_state = None
+        self.rewind_state = None
+        self.start_state = None
         
     def on_registered(self, iface: TMInterface) -> None:
+        iface.execute_command("press delete")
         print(f'Registered to {iface.server_name}')
 
     def on_run_step(self, iface, _time: int):
 
-        if self.is_respawn and _time >= 0:
-            iface.rewind_to_state(self.train_state)
+        if _time == 0:
+            self.start_state = iface.get_simulation_state()
+
+        if self.is_respawn and self.rewind_state is not None and _time >= 0:
+            iface.rewind_to_state(self.rewind_state)
             self.is_respawn = False
 
         self.sim_state = iface.get_simulation_state()
@@ -77,7 +81,11 @@ class CustomClient(Client):
         self.is_respawn = True 
         self.passed_checkpoint = False
         self.is_finish = False
-        self.train_state = state
+
+        if state is None:
+            self.rewind_state = self.start_state
+        else:
+            self.rewind_state = state
 
     def reset_last_action_timer(self):
         self.last_action_step = 0
