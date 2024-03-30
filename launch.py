@@ -4,7 +4,9 @@ import keyboard
 import time
 
 if __name__ == "__main__":
-    env =  TrackmaniaEnv(observation_space="image", dimension_reduction=6)
+    env =  TrackmaniaEnv(observation_space="image", 
+                         dimension_reduction=6, 
+                         training_track="Training_dataset_flat_tech")
     env.reset()
     i = 0
     while True:
@@ -13,10 +15,10 @@ if __name__ == "__main__":
         action = [0, 0, 0]
         new_observation, reward, done, truncated, info = env.step(action)
 
-        if i ==2:
-            print(reward)
-            i = 0
-        i += 1
+        # if i ==2:
+        #     print(reward)
+        #     i = 0
+        # i += 1
 
         try:
             if keyboard.is_pressed("q"):

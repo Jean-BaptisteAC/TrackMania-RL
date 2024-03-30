@@ -5,7 +5,7 @@ import time
 import numpy as np
 import random
 from gymnasium import Env
-from gymnasium.spaces import Box, MultiBinary, Dict
+from gymnasium.spaces import Box, Dict
 
 from .TMIClient import CustomClient
 from .utils.GameCapture import Lidar_Vision, Image_Vision
@@ -13,11 +13,9 @@ from .utils.GameCapture import Lidar_Vision, Image_Vision
 from tminterface.interface import TMInterface
 
 from scipy.interpolate import interp1d
-from scipy.signal import argrelmin
 
 import torch
  
-ArrowsActionSpace = MultiBinary(4,)
 ControllerActionSpace = Box(
     low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
 )
@@ -41,6 +39,7 @@ class TrackmaniaEnv(Env):
         self,
         observation_space: str = "image",
         dimension_reduction: int = 6,
+        training_track: str = "Training_dataset_flat_tech",
         render_mode: str | None = None,
     ):
         self.action_space = ControllerActionSpace
@@ -71,6 +70,8 @@ class TrackmaniaEnv(Env):
         while not self.interface.registered:
             time.sleep(0.1)
 
+        self.training_track = training_track
+
         self.max_race_time = 120_000
         self.first_init = True
         self.total_distance = 0
@@ -88,7 +89,7 @@ class TrackmaniaEnv(Env):
     def init_centerline(self):
 
         # init save_states for respawn
-        run_folder = "track_data/Training_dataset_flat_tech/run-1"
+        run_folder = "track_data/" + self.training_track + "/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
         self.client.train_state = self.save_states[0]
