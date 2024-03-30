@@ -6,7 +6,7 @@ import time
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", 
                          dimension_reduction=6, 
-                         training_track="Training_dataset_flat_tech")
+                         training_track=None)
     env.reset()
     i = 0
     while True:
