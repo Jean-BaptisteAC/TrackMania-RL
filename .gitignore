@@ -7,3 +7,5 @@ models/*
 .env
 
 track_data/*
+
+screenshots/*

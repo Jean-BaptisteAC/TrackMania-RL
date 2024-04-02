@@ -111,7 +111,6 @@ class Lidar_Vision():
         distances = (distances - 0.5)*2
         return np.array(distances), min_distance
     
-    
 
 class Image_Vision():
     def __init__(self, dimension_reduction = 4):
