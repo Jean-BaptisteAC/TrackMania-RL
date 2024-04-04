@@ -97,22 +97,28 @@ class TrackmaniaEnv(Env):
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
+
         raw_points = [list(pos['position'].to_numpy()) for pos in positions]
+            
+        # remove duplicates:
         points = [raw_points[0]]
         for point in raw_points[1:]:
             if point != points[-1]:
                 points.append(point)
-
+            else:
+                for i in range(len(point)):
+                    point[i] += 0.01
+                points.append(point)
         points = np.array(points)
 
-        # Linear length along the line:
-        distance = np.cumsum( np.sqrt(np.sum( np.diff(points, axis=0)**2, axis=1 )))
-        distance = np.insert(distance, 0, 0)/distance[-1]
+        # Time along the track:
+        time = np.linspace(0, 1, len(points))
 
-        interpolator =  interp1d(distance, points, kind='linear', axis=0)
-        alpha = np.linspace(0, 1, 1000)
-        self.centerline = interpolator(alpha)
+        interpolator =  interp1d(time, points, kind='slinear', axis=0)
 
+        self.alpha = np.linspace(0, 1, len(points)*10)
+        self.centerline = interpolator(self.alpha)
+        self.finish_time = positions[-1]["time"]/1000
 
     def reset(self, seed=0):
 
@@ -198,7 +204,8 @@ class TrackmaniaEnv(Env):
         #     self.reset()
 
         # # Check for distance from centerline 
-        # if self.compute_centerline_distance() > 50:
+        # min_d, eq_time = self.compute_centerline_distance()
+        # if min_d > 50:
         #     done = True
         #     special_reward = -20
         #     info["total_distance"] = self.total_distance
@@ -329,4 +336,8 @@ class TrackmaniaEnv(Env):
 
         # minimal distance to centerline
         min_d = dis[glob_min_idx]
-        return min_d
+
+        # equivalent time of the centerline
+        eq_time = (glob_min_idx/(len(self.alpha)-1))*self.finish_time
+
+        return min_d, eq_time
