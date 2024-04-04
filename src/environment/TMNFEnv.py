@@ -40,6 +40,7 @@ class TrackmaniaEnv(Env):
         observation_space: str = "image",
         dimension_reduction: int = 6,
         training_track: str | None = None,
+        training_mode: str = "exploration",
         render_mode: str | None = None,
     ):
         self.action_space = ControllerActionSpace
@@ -86,6 +87,8 @@ class TrackmaniaEnv(Env):
 
         if self.training_track is not None:
             self.init_centerline()
+
+        self.training_mode = training_mode
 
     def init_centerline(self):
 
@@ -144,7 +147,7 @@ class TrackmaniaEnv(Env):
     def step(self, action):
 
         self.client.action = action
-        self.last_reset_time_step += 1
+        self.last_reset_time_step += 1 
         
         screen_observation, distance_observation = self.viewer.get_obs()
         self.render()
@@ -154,7 +157,30 @@ class TrackmaniaEnv(Env):
         self.total_distance += ((self.state.race_time - self.last_time_step) /1000) * (np.linalg.norm(self.velocity())/3.6)
         self.last_time_step = self.state.race_time
 
-        # velocity_reward = np.linalg.norm(self.velocity())/100
+        if self.training_mode == "exploration":
+            reward = self.exploration_reward(distance_observation)
+
+        elif self.training_mode == "time_optimization":
+            reward = self.time_optimization_reward()
+
+        special_reward, done, info  = self.check_state()
+        if special_reward is not None:
+            reward = special_reward
+        
+        truncated = False
+
+        self.client.reset_last_action_timer()
+
+        reward = np.clip(reward, -10, 10)
+
+        return observation, reward, done, truncated, info
+        
+    
+    def close(self):
+        self.interface.close()
+
+    def exploration_reward(self, distance_observation):
+
         velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
 
         contact = self.state.scene_mobil.has_any_lateral_contact
@@ -169,25 +195,12 @@ class TrackmaniaEnv(Env):
             distance_reward = distance_observation
             alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
-
-        special_reward, done, info  = self.check_state()
-        if special_reward is not None:
-            reward = special_reward
-        
-        truncated = False
-
-        self.client.reset_last_action_timer()
-
-        reward = np.clip(reward, -10, 10)
-
-        # TEMPORARY TESTING
-        # return observation, reward, done, truncated, info
-        return observation, distance_reward, done, truncated, info
-        
+        return reward
     
-    def close(self):
-        self.interface.close()
-        
+    def time_optimization_reward(self):
+        _, eq_time = self.compute_centerline_distance()
+        return (eq_time - self.race_time/1000)
+
 
     def check_state(self):
         special_reward = None 
