@@ -68,11 +68,11 @@ if __name__ == "__main__":
 
     algorithm = "PPO"
     model_name = "PPO_Tanh_gSDE_lr_2e-5"
-    
+
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
                        "training_track":"Straight_Line", 
-                       "training_mode":"time_optimization"}
+                       "training_mode":"exploration"}
     
 
 
