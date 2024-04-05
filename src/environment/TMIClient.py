@@ -63,7 +63,7 @@ class CustomClient(Client):
                 self.is_idle = True
                 iface.execute_command("press delete")
 
-        iface.set_input_state(**current_action)
+        # iface.set_input_state(**current_action)
 
         self.last_action_step += 1
         

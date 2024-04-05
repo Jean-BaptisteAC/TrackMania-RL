@@ -67,12 +67,12 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Tanh_gSDE_lr_2e-5"
+    model_name = "PPO_time_optimization_test"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
                        "training_track":"Straight_Line", 
-                       "training_mode":"exploration"}
+                       "training_mode":"time_optimization"}
     
 
 
@@ -97,8 +97,7 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    # agent_path = "models/PPO/PPO_Training_Flat_Dataset_lr_1e-4/601k"
-    # parameters_to_change = {"learning_rate":1e-5}
-    # testbed.load_agent(model_path=agent_path, step=601_000, parameters_to_change=parameters_to_change)
+    agent_path = "models/PPO/PPO_Tanh_gSDE_lr_2e-5/98k"
+    testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
 
     testbed.train(600_000)

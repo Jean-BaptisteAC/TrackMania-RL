@@ -78,8 +78,7 @@ class TrackmaniaEnv(Env):
         self.total_distance = 0
         self.last_time_step = 0
 
-        self.train_steps = 3_000
-        self.current_step = 0
+        self.previous_centerline_time = [0]
 
         self.last_reset_time_step = 0
         
@@ -119,7 +118,7 @@ class TrackmaniaEnv(Env):
 
         interpolator =  interp1d(time, points, kind='slinear', axis=0)
 
-        self.alpha = np.linspace(0, 1, len(points)*10)
+        self.alpha = np.linspace(0, 1, len(points)*100)
         self.centerline = interpolator(self.alpha)
         self.finish_time = positions[-1]["time"]/1000
 
@@ -137,6 +136,8 @@ class TrackmaniaEnv(Env):
 
         self.total_distance = 0
         self.last_reset_time_step = 0
+
+        self.previous_centerline_time = [0]
         
         return observation, info
     
@@ -199,7 +200,12 @@ class TrackmaniaEnv(Env):
     
     def time_optimization_reward(self):
         _, eq_time = self.compute_centerline_distance()
-        return (eq_time - self.race_time/1000)
+        reward = eq_time - self.previous_centerline_time[0]
+        self.previous_centerline_time.append(eq_time)
+        if len(self.previous_centerline_time) > 40:
+            self.previous_centerline_time.pop(0)
+
+        return reward
 
 
     def check_state(self):
