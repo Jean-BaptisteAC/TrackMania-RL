@@ -67,6 +67,8 @@ class TestBed:
             SB3_arguments["buffer_size"] = kwargs["buffer_size"]
         if "train_freq" in kwargs:
             SB3_arguments["train_freq"] = kwargs["train_freq"]
+        if "use_sde " in kwargs:
+            SB3_arguments["use_sde "] = kwargs["use_sde "]
 
         if "seed" in kwargs:
             SB3_arguments["seed"] = kwargs["seed"]

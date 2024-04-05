@@ -208,13 +208,12 @@ class TrackmaniaEnv(Env):
         info = {"checkpoint_time":False,
                 "total_distance":False}
 
-        # # TEMPORARY TESTING
-        # # Check for exit of the track
-        # if self.position[1] < 9.2:
-        #     done = True
-        #     special_reward = -10
-        #     info["total_distance"] = self.total_distance
-        #     self.reset()
+        # Check for exit of the track
+        if self.position[1] < 9.2:
+            done = True
+            special_reward = -10
+            info["total_distance"] = self.total_distance
+            self.reset()
 
         # # Check for distance from centerline 
         # min_d, eq_time = self.compute_centerline_distance()
@@ -225,14 +224,13 @@ class TrackmaniaEnv(Env):
         #     print("out_of_centerline")
         #     self.reset()
 
-        # # TEMPORARY TESTING
-        # # Check for complete stop of the car
-        # if self.last_reset_time_step >= 60:
-        #     if self.velocity()[2] < 1:
-        #         done = True
-        #         special_reward = -10
-        #         info["total_distance"] = self.total_distance
-        #         self.reset()
+        # Check for complete stop of the car
+        if self.last_reset_time_step >= 60:
+            if self.velocity()[2] < 1:
+                done = True
+                special_reward = -10
+                info["total_distance"] = self.total_distance
+                self.reset()
 
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:

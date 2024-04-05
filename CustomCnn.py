@@ -67,19 +67,25 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Training_Flat_Dataset_lr_1e-4"
-    parameters_dict = {"observation_space":"image", "dimension_reduction":6}
+    model_name = "PPO_Tanh_gSDE_lr_2e-5"
+    
+    parameters_dict = {"observation_space":"image", 
+                       "dimension_reduction":6,
+                       "training_track":"Straight_Line", 
+                       "training_mode":"time_optimization"}
+    
+
+
     save_interval = 12_288
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
         features_extractor_kwargs=dict(features_dim=128),
-        activation_fn=th.nn.ReLU, 
+        activation_fn=th.nn.Tanh, 
         net_arch=[128, 128],
     )   
     seed=0
-    learning_rate = 1e-5
-    # buffer_size = 50_000
-    # train_freq  = (1_000, "step")
+    learning_rate = 2e-5
+    use_sde = True
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
@@ -88,10 +94,11 @@ if __name__ == "__main__":
                       save_interval=save_interval,
                       policy_kwargs=policy_kwargs,
                       seed=seed,
-                      learning_rate=learning_rate)
+                      learning_rate=learning_rate, 
+                      use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_Training_Flat_Dataset_lr_1e-4/601k"
-    parameters_to_change = {"learning_rate":1e-5}
-    testbed.load_agent(model_path=agent_path, step=601_000, parameters_to_change=parameters_to_change)
+    # agent_path = "models/PPO/PPO_Training_Flat_Dataset_lr_1e-4/601k"
+    # parameters_to_change = {"learning_rate":1e-5}
+    # testbed.load_agent(model_path=agent_path, step=601_000, parameters_to_change=parameters_to_change)
 
     testbed.train(600_000)

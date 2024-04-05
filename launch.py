@@ -7,13 +7,14 @@ if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", 
                          dimension_reduction=6, 
                          training_track="Straight_Line", 
-                         training_mode="time_optimization")
+                         training_mode="time_optimization", 
+                         render_mode="human")
 
     env.reset()
     i = 0
     while True:
         
-        action = [0, 0, 0]
+        action = [0, 1, 0]
         new_observation, reward, done, truncated, info = env.step(action)
 
         if done:
