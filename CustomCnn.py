@@ -67,7 +67,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_time_optimization_test_II"
+    model_name = "PPO_time_optimization_test_new_proxy"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,

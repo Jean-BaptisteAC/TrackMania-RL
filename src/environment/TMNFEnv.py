@@ -80,6 +80,7 @@ class TrackmaniaEnv(Env):
         self.last_time_step = 0
 
         self.previous_centerline_time = [0]
+        self.previous_centerline_positions = np.array([])
 
         self.last_reset_time_step = 0
         
@@ -144,6 +145,7 @@ class TrackmaniaEnv(Env):
         self.last_reset_time_step = 0
 
         self.previous_centerline_time = [0]
+        self.previous_centerline_positions = []
         
         return observation, info
     
@@ -209,7 +211,7 @@ class TrackmaniaEnv(Env):
         _, eq_time = self.compute_centerline_distance()
         reward = eq_time - self.previous_centerline_time[0]
         self.previous_centerline_time.append(eq_time)
-        if len(self.previous_centerline_time) > 10:
+        if len(self.previous_centerline_time) > 5:
             self.previous_centerline_time.pop(0)
         
         return reward
@@ -351,7 +353,10 @@ class TrackmaniaEnv(Env):
         y = self.centerline[:,1]
         z = self.centerline[:,2]
 
-        current_position = self.position
+        self.previous_centerline_positions.append(self.position)
+        if len(self.previous_centerline_positions) >= 10:
+            self.previous_centerline_positions.pop(0)
+        current_position = np.array(self.previous_centerline_positions).mean(axis=0)
 
         # compute distance
         dis = self.distance_3D(x, y, z, current_position[0], current_position[1], current_position[2])
@@ -371,7 +376,7 @@ class TrackmaniaEnv(Env):
         lower = self.alpha[min_index]
         higher = self.alpha[max_index]
 
-        alpha2 = np.linspace(lower, higher, 1_000)
+        alpha2 = np.linspace(lower, higher, len(self.alpha))
         coords2 = self.interpolator(alpha2)
         x = coords2[:,0]
         y = coords2[:,1]

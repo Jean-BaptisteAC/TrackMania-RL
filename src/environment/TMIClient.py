@@ -63,7 +63,7 @@ class CustomClient(Client):
                 self.is_idle = True
                 iface.execute_command("press delete")
 
-        # iface.set_input_state(**current_action)
+        iface.set_input_state(**current_action)
 
         self.last_action_step += 1
         
@@ -93,7 +93,6 @@ class CustomClient(Client):
         self.is_idle = False
 
 if __name__ == "__main__":
-    
     
     interface = TMInterface()
     client = CustomClient()
