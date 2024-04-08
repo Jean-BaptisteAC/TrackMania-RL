@@ -3,6 +3,7 @@ import pickle
 from typing import TypeVar
 import time
 import numpy as np
+import pandas as pd
 import random
 from gymnasium import Env
 from gymnasium.spaces import Box, Dict
@@ -101,6 +102,11 @@ class TrackmaniaEnv(Env):
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
 
         raw_points = [list(pos['position'].to_numpy()) for pos in positions]
+
+        # smoothing
+        df = pd.DataFrame(raw_points)
+        ema = df.ewm(com=40).mean()
+        raw_points = ema.values.tolist()
             
         # remove duplicates:
         points = [raw_points[0]]
@@ -116,10 +122,10 @@ class TrackmaniaEnv(Env):
         # Time along the track:
         time = np.linspace(0, 1, len(points))
 
-        interpolator =  interp1d(time, points, kind='slinear', axis=0)
+        self.interpolator =  interp1d(time, points, kind='slinear', axis=0)
 
-        self.alpha = np.linspace(0, 1, len(points)*100)
-        self.centerline = interpolator(self.alpha)
+        self.alpha = np.linspace(0, 1, len(points))
+        self.centerline = self.interpolator(self.alpha)
         self.finish_time = positions[-1]["time"]/1000
 
     def reset(self, seed=0):
@@ -199,12 +205,13 @@ class TrackmaniaEnv(Env):
         return reward
     
     def time_optimization_reward(self):
+        
         _, eq_time = self.compute_centerline_distance()
         reward = eq_time - self.previous_centerline_time[0]
         self.previous_centerline_time.append(eq_time)
-        if len(self.previous_centerline_time) > 40:
+        if len(self.previous_centerline_time) > 10:
             self.previous_centerline_time.pop(0)
-
+        
         return reward
 
 
@@ -344,7 +351,7 @@ class TrackmaniaEnv(Env):
         y = self.centerline[:,1]
         z = self.centerline[:,2]
 
-        current_position = list(self.state.dyna.current_state.position.to_numpy())
+        current_position = self.position
 
         # compute distance
         dis = self.distance_3D(x, y, z, current_position[0], current_position[1], current_position[2])
@@ -355,6 +362,30 @@ class TrackmaniaEnv(Env):
         min_d = dis[glob_min_idx]
 
         # equivalent time of the centerline
-        eq_time = (glob_min_idx/(len(self.alpha)-1))*self.finish_time
+        eq_time = self.alpha[glob_min_idx]*self.finish_time
+
+
+        # DOUBLE PRECISION
+        min_index = max(0, glob_min_idx - 1)
+        max_index = min(len(self.alpha) -1, glob_min_idx + 1)
+        lower = self.alpha[min_index]
+        higher = self.alpha[max_index]
+
+        alpha2 = np.linspace(lower, higher, 1_000)
+        coords2 = self.interpolator(alpha2)
+        x = coords2[:,0]
+        y = coords2[:,1]
+        z = coords2[:,2]
+
+        dis = self.distance_3D(x, y, z, current_position[0], current_position[1], current_position[2])
+
+        # find the minima
+        glob_min_idx = np.argmin(dis)
+        # distance
+        min_d = dis[glob_min_idx]
+
+        # print(glob_min_idx)
+
+        eq_time = alpha2[glob_min_idx]*self.finish_time
 
         return min_d, eq_time

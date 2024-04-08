@@ -19,7 +19,7 @@ if __name__ == "__main__":
         if done:
             info
         
-        if i == 5:
+        if i == 2:
             print(reward)
             i = 0
         i += 1
