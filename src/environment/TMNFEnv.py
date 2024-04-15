@@ -74,7 +74,6 @@ class TrackmaniaEnv(Env):
 
         self.training_track = training_track
 
-        self.max_race_time = 120_000
         self.first_init = True
         self.total_distance = 0
         self.last_time_step = 0
@@ -88,6 +87,12 @@ class TrackmaniaEnv(Env):
 
         if self.training_track is not None:
             self.init_centerline()
+            self.episode_state = random.choice(self.save_states)
+
+        self.episode_length = 500
+        self.episode_step = 0
+
+        
 
         self.training_mode = training_mode
 
@@ -132,7 +137,7 @@ class TrackmaniaEnv(Env):
     def reset(self, seed=0):
 
         if self.training_track is not None:
-            state = random.choice(self.save_states)
+            state = self.episode_state
         else:
             state = None
         self.client.respawn(state)
@@ -157,6 +162,8 @@ class TrackmaniaEnv(Env):
 
         self.client.action = action
         self.last_reset_time_step += 1 
+
+        self.episode_step += 1
         
         screen_observation, distance_observation = self.viewer.get_obs()
         self.render()
@@ -172,11 +179,10 @@ class TrackmaniaEnv(Env):
         elif self.training_mode == "time_optimization":
             reward = self.time_optimization_reward()
 
-        special_reward, done, info  = self.check_state()
+        special_reward, done, truncated, info  = self.check_state()
         if special_reward is not None:
             reward = special_reward
         
-        truncated = False
 
         self.client.reset_last_action_timer()
 
@@ -204,7 +210,10 @@ class TrackmaniaEnv(Env):
             distance_reward = distance_observation
             alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
-        return reward
+        # return reward
+        # TEMPORARY
+        return distance_reward
+
     
     def time_optimization_reward(self):
         
@@ -220,6 +229,7 @@ class TrackmaniaEnv(Env):
     def check_state(self):
         special_reward = None 
         done = False
+        truncated = False
         info = {"checkpoint_time":False,
                 "total_distance":False}
 
@@ -274,9 +284,19 @@ class TrackmaniaEnv(Env):
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
             done = True
+            truncated = True
             self.reset()
+
+        # Check for episode duration 
+        if self.training_track is not None:
+            if self.episode_step >= self.episode_length:
+                done = True
+                self.episode_step = 0
+                self.episode_state = random.choice(self.save_states)
+                truncated = True
+                self.reset()
         
-        return special_reward, done, info
+        return special_reward, done, truncated, info
     
 
     def observation(self, screen_observation):

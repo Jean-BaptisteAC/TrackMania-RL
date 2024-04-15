@@ -118,8 +118,8 @@ class Image_Vision():
 
         # Crop the screenshot to remove unecessary information and reduce dimensionality
         self.lateral_margin = 10 + 2
-        self.upper_margin = 40 + 200
-        self.lower_margin = 10 + 0
+        self.upper_margin = 40 + 150
+        self.lower_margin = 10 + 50
         self.dimension_reduction = dimension_reduction
             
         self.get_frame()
@@ -186,8 +186,8 @@ class Image_Vision():
         
         H, W = self.frame.shape[0], self.frame.shape[1]
 
-        horizon = round(H*10/56)
-        bottom = round(H*20/56)
+        horizon = round(H*30/56)
+        bottom = round(H*0)
 
         self.left = self.frame[horizon:H-bottom, 1:W//2]
         self.right = self.frame[horizon:H-bottom, W:W//2:-1]
@@ -201,13 +201,14 @@ class Image_Vision():
         total = np.concatenate((flat_left, flat_right))
         mean, std = total.mean(), total.std()
 
-        flat_left = (flat_left - mean)/std
-        flat_right = (flat_right - mean)/std
+        std_offset = 0.05
+        flat_left = (flat_left - mean)/(std + std_offset)
+        flat_right = (flat_right - mean)/(std + std_offset)
 
         error = mean_absolute_error(flat_left, flat_right)
 
         gain = 8
-        offset = -1.2
+        offset = -1.0
 
         x = gain*(error + offset)
 
