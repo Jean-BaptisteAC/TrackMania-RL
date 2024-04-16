@@ -6,7 +6,7 @@ import time
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", 
                          dimension_reduction=6, 
-                        #  training_track="Training_dataset_flat_tech", 
+                         training_track="Fork_Test", 
                          training_mode="exploration", 
                          render_mode="human")
 
@@ -20,10 +20,10 @@ if __name__ == "__main__":
         # if done:
         #     print(info)
         
-        if i == 7:
-            print(reward)
-            i = 0
-        i += 1
+        # if i == 7:
+        #     print(reward)
+        #     i = 0
+        # i += 1
 
         try:
             if keyboard.is_pressed("q"):

@@ -233,21 +233,20 @@ class TrackmaniaEnv(Env):
         info = {"checkpoint_time":False,
                 "total_distance":False}
 
-        # Check for exit of the track
-        if self.position[1] < 9.2:
+        # # Check for exit of the track
+        # if self.position[1] < 9.2:
+        #     done = True
+        #     special_reward = -10
+        #     info["total_distance"] = self.total_distance
+        #     self.reset()
+
+        # Check for distance from centerline 
+        min_d, eq_time = self.compute_centerline_distance()
+        if min_d > 23:
             done = True
-            special_reward = -10
+            special_reward = -20
             info["total_distance"] = self.total_distance
             self.reset()
-
-        # # Check for distance from centerline 
-        # min_d, eq_time = self.compute_centerline_distance()
-        # if min_d > 50:
-        #     done = True
-        #     special_reward = -20
-        #     info["total_distance"] = self.total_distance
-        #     print("out_of_centerline")
-        #     self.reset()
 
         # Check for complete stop of the car
         if self.last_reset_time_step >= 60:
@@ -408,6 +407,12 @@ class TrackmaniaEnv(Env):
         glob_min_idx = np.argmin(dis)
         # distance
         min_d = dis[glob_min_idx]
+
+        # Asymmetric distance 
+        d_x = x[glob_min_idx] - current_position[0]
+        d_y = (y[glob_min_idx] - current_position[1])/2
+        d_z = z[glob_min_idx] - current_position[2]
+        min_d = np.linalg.norm([d_x, d_y, d_z]) 
 
         # print(glob_min_idx)
 
