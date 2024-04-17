@@ -242,7 +242,6 @@ class TrackmaniaEnv(Env):
         if min_d > 23:
             done = True
             special_reward = -20
-            info["total_distance"] = self.total_distance
             self.reset()
 
         # Check for complete stop of the car
@@ -250,7 +249,6 @@ class TrackmaniaEnv(Env):
             if self.velocity()[2] < 1:
                 done = True
                 special_reward = -10
-                info["total_distance"] = self.total_distance
                 self.reset()
 
         # Check for finishing in the checkpoint
@@ -260,7 +258,6 @@ class TrackmaniaEnv(Env):
             if self.client.is_finish:
                 done = True    
                 info["checkpoint_time"] = self.client.time
-                info["total_distance"] = self.total_distance
                 self.reset()
 
         # Check for contact with barriers in lidar mode
