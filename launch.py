@@ -19,10 +19,10 @@ if __name__ == "__main__":
         # if done:
         #     print(info)
         
-        # if i == 7:
-        #     print(reward)
-        #     i = 0
-        # i += 1
+        if i == 7:
+            print(reward)
+            i = 0
+        i += 1
 
         try:
             if keyboard.is_pressed("q"):

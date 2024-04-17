@@ -87,12 +87,9 @@ class TrackmaniaEnv(Env):
 
         if self.training_track is not None:
             self.init_centerline()
-            # self.episode_state = random.choice(self.save_states)
-            self.episode_state = self.save_states[0]
+            self.episode_state = random.choice(self.save_states)
 
-        # TEMPORARY TESTING
-        # self.episode_length = 500
-        self.episode_length = 500_000_000
+        self.episode_length = 1_000
 
         self.episode_step = 0
         self.episode_id = 0
@@ -104,7 +101,7 @@ class TrackmaniaEnv(Env):
         # init save_states for respawn
         run_folder = "track_data/" + self.training_track + "/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
-        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files][0:2]
+        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -212,9 +209,7 @@ class TrackmaniaEnv(Env):
             distance_reward = distance_observation
             alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
-        # return reward
-        # TEMPORARY
-        return distance_reward
+        return reward
 
     
     def time_optimization_reward(self):
@@ -287,14 +282,8 @@ class TrackmaniaEnv(Env):
                 done = True
                 self.episode_step = 0
 
-                # TEMPORARY
-                # self.episode_state = random.choice(self.save_states)
-
-                self.episode_id += 1
-                if self.episode_id == len(self.save_states):
-                    self.episode_id = 0
-                self.episode_state = self.save_states[0]
-
+                self.episode_state = random.choice(self.save_states)
+                info["total_distance"] = self.total_distance
                 truncated = True
                 self.reset()
         
