@@ -87,12 +87,15 @@ class TrackmaniaEnv(Env):
 
         if self.training_track is not None:
             self.init_centerline()
-            self.episode_state = random.choice(self.save_states)
+            # self.episode_state = random.choice(self.save_states)
+            self.episode_state = self.save_states[0]
 
-        self.episode_length = 500
+        # TEMPORARY TESTING
+        # self.episode_length = 500
+        self.episode_length = 500_000_000
+
         self.episode_step = 0
-
-        
+        self.episode_id = 0
 
         self.training_mode = training_mode
 
@@ -101,8 +104,7 @@ class TrackmaniaEnv(Env):
         # init save_states for respawn
         run_folder = "track_data/" + self.training_track + "/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
-        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
-        self.client.train_state = self.save_states[0]
+        self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files][0:2]
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -272,13 +274,6 @@ class TrackmaniaEnv(Env):
             special_reward = -10
             info["total_distance"] = self.total_distance
             self.reset()
-            
-        # Time out when max episode duration is reached
-        if self.training_track is not None:
-            if self.last_reset_time_step >= 3_000 :
-                done = True
-                info["total_distance"] = self.total_distance
-                self.reset()
 
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
@@ -286,12 +281,20 @@ class TrackmaniaEnv(Env):
             truncated = True
             self.reset()
 
-        # Check for episode duration 
+        # Time out when max episode duration is reached 
         if self.training_track is not None:
             if self.episode_step >= self.episode_length:
                 done = True
                 self.episode_step = 0
-                self.episode_state = random.choice(self.save_states)
+
+                # TEMPORARY
+                # self.episode_state = random.choice(self.save_states)
+
+                self.episode_id += 1
+                if self.episode_id == len(self.save_states):
+                    self.episode_id = 0
+                self.episode_state = self.save_states[0]
+
                 truncated = True
                 self.reset()
         

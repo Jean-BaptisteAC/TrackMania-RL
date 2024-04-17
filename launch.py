@@ -6,9 +6,8 @@ import time
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", 
                          dimension_reduction=6, 
-                         training_track="Fork_Test", 
-                         training_mode="exploration", 
-                         render_mode="human")
+                         training_track="Training_Dataset_Tech&Dirt", 
+                         training_mode="exploration")
 
     env.reset()
     i = 0
