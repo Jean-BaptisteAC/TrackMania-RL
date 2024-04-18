@@ -102,6 +102,9 @@ class TrackmaniaEnv(Env):
         run_folder = "track_data/" + self.training_track + "/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
+        # TEMPORARY: DIRT ONLY
+        self.save_states = self.save_states[:15]
+
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -145,8 +148,8 @@ class TrackmaniaEnv(Env):
         observation = self.observation(screen_observation)
         info = {}
 
-        self.total_distance = 0
         self.last_reset_time_step = 0
+        self.last_time_step = self.state.race_time
 
         self.previous_centerline_time = [0]
         self.previous_centerline_positions = []
@@ -238,11 +241,12 @@ class TrackmaniaEnv(Env):
         #     self.reset()
 
         # Check for distance from centerline 
-        min_d, eq_time = self.compute_centerline_distance()
-        if min_d > 23:
-            done = True
-            special_reward = -20
-            self.reset()
+        if self.training_track is not None:
+            min_d, eq_time = self.compute_centerline_distance()
+            if min_d > 23:
+                done = True
+                special_reward = -10
+                self.reset()
 
         # Check for complete stop of the car
         if self.last_reset_time_step >= 60:
@@ -281,6 +285,7 @@ class TrackmaniaEnv(Env):
 
                 self.episode_state = random.choice(self.save_states)
                 info["total_distance"] = self.total_distance
+                self.total_distance = 0
                 truncated = True
                 self.reset()
         

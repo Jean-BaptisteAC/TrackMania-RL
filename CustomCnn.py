@@ -67,12 +67,12 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_time_optimization_test_new_proxy"
+    model_name = "PPO_Training_Dataset_Dirt_only"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"Straight_Line", 
-                       "training_mode":"time_optimization"}
+                       "training_track":"Training_Dataset_Tech&Dirt", 
+                       "training_mode":"exploration"}
     
 
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         net_arch=[128, 128],
     )   
     seed=0
-    learning_rate = 2e-5
+    learning_rate = 1e-4
     use_sde = True
 
     testbed = TestBed(algorithm=algorithm,
@@ -97,7 +97,7 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_Tanh_gSDE_lr_2e-5/98k"
-    testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
+    # agent_path = "models/PPO/PPO_Tanh_gSDE_lr_2e-5/98k"
+    # testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
 
-    testbed.train(600_000)
+    testbed.train(1_000_000)

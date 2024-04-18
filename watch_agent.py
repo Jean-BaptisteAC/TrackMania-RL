@@ -6,14 +6,14 @@ import keyboard
 if __name__ == "__main__":
 
     env = TrackmaniaEnv(observation_space="image", 
-                        dimension_reduction=6,
+                        dimension_reduction=4,
                         training_track=None, 
                         training_mode="exploration")
 
     model_type = "PPO"
     models_dir = "models/" + model_type
-    model_watch_name = "PPO_Tanh_gSDE_lr_2e-5"
-    model_step = "98k"
+    model_watch_name = "PPO_Training_Dataset_Tech&Dirt"
+    model_step = "552k"
 
     model_path = f"{models_dir}/{model_watch_name}/{model_step}"
     model_to_watch = PPO.load(model_path, env=env)
