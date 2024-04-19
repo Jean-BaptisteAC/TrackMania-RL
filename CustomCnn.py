@@ -67,11 +67,11 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Training_Dataset_Dirt_only"
+    model_name = "PPO_Training_Dataset_Dirt_2_only"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"Training_Dataset_Tech&Dirt", 
+                       "training_track":"Training_Dataset_Tech&Dirt_2", 
                        "training_mode":"exploration"}
     
 

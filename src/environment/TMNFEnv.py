@@ -87,12 +87,11 @@ class TrackmaniaEnv(Env):
 
         if self.training_track is not None:
             self.init_centerline()
-            self.episode_state = random.choice(self.save_states)
+            self.checkpoint_id = np.random.randint(len(self.save_states))
+            self.episode_state = self.save_states[self.checkpoint_id]
 
         self.episode_length = 1_000
-
         self.episode_step = 0
-        self.episode_id = 0
 
         self.training_mode = training_mode
 
@@ -103,7 +102,7 @@ class TrackmaniaEnv(Env):
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
         # TEMPORARY: DIRT ONLY
-        self.save_states = self.save_states[:15]
+        self.save_states = self.save_states[:19]
 
 
         # init centerline
@@ -175,6 +174,11 @@ class TrackmaniaEnv(Env):
         self.total_distance += ((self.state.race_time - self.last_time_step) /1000) * (np.linalg.norm(self.velocity())/3.6)
         self.last_time_step = self.state.race_time
 
+        if self.training_track is not None:
+            min_d, eq_time = self.compute_centerline_distance()
+            self.min_d = min_d
+            self.eq_time = eq_time
+
         if self.training_mode == "exploration":
             reward = self.exploration_reward(distance_observation)
 
@@ -209,17 +213,25 @@ class TrackmaniaEnv(Env):
             reward = velocity_reward - (alpha * distance_reward ** 2) - wall_penalty
 
         elif self.observation_type == "image":
-            distance_reward = distance_observation
+
+            # HARD CODING OF: TRAINING DATASET TECH & DIRT 2
+            if self.checkpoint_id <= 18:
+
+                # ROAD RADIUS ON DIRT IS APPROXIMATELY 11m 
+                x = 7*((self.min_d/11) - 0.5)
+                distance_reward = 1/(1 + np.exp(-x)) 
+            else:
+                distance_reward = distance_observation
             alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
+        
         return reward
 
     
     def time_optimization_reward(self):
         
-        _, eq_time = self.compute_centerline_distance()
-        reward = eq_time - self.previous_centerline_time[0]
-        self.previous_centerline_time.append(eq_time)
+        reward = self.eq_time - self.previous_centerline_time[0]
+        self.previous_centerline_time.append(self.eq_time)
         if len(self.previous_centerline_time) > 5:
             self.previous_centerline_time.pop(0)
         
@@ -242,8 +254,7 @@ class TrackmaniaEnv(Env):
 
         # Check for distance from centerline 
         if self.training_track is not None:
-            min_d, eq_time = self.compute_centerline_distance()
-            if min_d > 23:
+            if self.min_d > 23:
                 done = True
                 special_reward = -10
                 self.reset()
