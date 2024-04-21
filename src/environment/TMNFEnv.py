@@ -90,7 +90,7 @@ class TrackmaniaEnv(Env):
             self.checkpoint_id = np.random.randint(len(self.save_states))
             self.episode_state = self.save_states[self.checkpoint_id]
 
-        self.episode_length = 1_000
+        self.episode_length = 600
         self.episode_step = 0
 
         self.training_mode = training_mode
@@ -101,9 +101,9 @@ class TrackmaniaEnv(Env):
         run_folder = "track_data/" + self.training_track + "/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
-        # TEMPORARY: DIRT ONLY
-        self.save_states = self.save_states[:19]
-
+        
+        # TEMPORARY: Dataset Restriction
+        self.save_states = self.save_states[3:5]
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -218,11 +218,11 @@ class TrackmaniaEnv(Env):
             if self.checkpoint_id <= 18:
 
                 # ROAD RADIUS ON DIRT IS APPROXIMATELY 11m 
-                x = 7*((self.min_d/11) - 0.5)
+                x = 10*((self.min_d/11) - 0.5)
                 distance_reward = 1/(1 + np.exp(-x)) 
             else:
                 distance_reward = distance_observation
-            alpha = 0.5
+            alpha = 1.0
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
         return reward

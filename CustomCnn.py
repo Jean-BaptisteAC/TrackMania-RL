@@ -34,6 +34,21 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.Flatten(),
         )
 
+        self.alternative = nn.Sequential(
+            nn.Conv2d(in_channels=n_input_channels, out_channels=32, kernel_size=(5, 5), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5, 5), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), stride=1),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(3, 3), stride=1),
+            nn.LeakyReLU(inplace=True),
+            nn.Flatten(),
+            )
+
+
         self.nature_cnn = nn.Sequential(
             nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
             nn.ReLU(),
@@ -67,7 +82,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Training_Dataset_Dirt_2_only"
+    model_name = "PPO_CP=3_4_cam=3_256"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
@@ -79,9 +94,9 @@ if __name__ == "__main__":
     save_interval = 12_288
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor,
-        features_extractor_kwargs=dict(features_dim=128),
+        features_extractor_kwargs=dict(features_dim=256),
         activation_fn=th.nn.Tanh, 
-        net_arch=[128, 128],
+        net_arch=[256, 256],
     )   
     seed=0
     learning_rate = 1e-4
@@ -100,4 +115,6 @@ if __name__ == "__main__":
     # agent_path = "models/PPO/PPO_Tanh_gSDE_lr_2e-5/98k"
     # testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
 
-    testbed.train(1_000_000)
+    # print(testbed.model.policy)
+
+    # testbed.train(1_000_000)
