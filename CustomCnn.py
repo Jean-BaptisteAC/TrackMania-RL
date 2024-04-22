@@ -34,19 +34,17 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.Flatten(),
         )
 
-        self.alternative = nn.Sequential(
+        self.linesight_cnn_upgraded = nn.Sequential(
             nn.Conv2d(in_channels=n_input_channels, out_channels=32, kernel_size=(5, 5), stride=2),
             nn.LeakyReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5, 5), stride=2),
             nn.LeakyReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), stride=1),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), stride=2),
             nn.LeakyReLU(inplace=True),
             nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(3, 3), stride=1),
             nn.LeakyReLU(inplace=True),
             nn.Flatten(),
-            )
+        )
 
 
         self.nature_cnn = nn.Sequential(
@@ -61,7 +59,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
 
         # Compute shape by doing one forward pass
         with th.no_grad():
-            n_flatten = self.linesight_cnn(
+            n_flatten = self.linesight_cnn_upgraded(
                 th.as_tensor(observation_space["image"].sample()[None]).float()
             ).shape[1]
 
@@ -72,7 +70,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
             )
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
-        image_embedding = self.cnn_head(self.linesight_cnn(observation["image"]))
+        image_embedding = self.cnn_head(self.linesight_cnn_upgraded(observation["image"]))
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
 
@@ -82,14 +80,13 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_CP=3_4_cam=3_256"
+    model_name = "PPO_General_Autonomous_Driving_Agent_1"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
                        "training_track":"Training_Dataset_Tech&Dirt_2", 
                        "training_mode":"exploration"}
     
-
 
     save_interval = 12_288
     policy_kwargs = dict(
@@ -112,9 +109,9 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    # agent_path = "models/PPO/PPO_Tanh_gSDE_lr_2e-5/98k"
-    # testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
+    agent_path = "models/PPO/PPO_General_Autonomous_Driving_Agent_1/245k"
+    testbed.load_agent(model_path=agent_path, step=245_000, parameters_to_change={})
 
     # print(testbed.model.policy)
 
-    # testbed.train(1_000_000)
+    testbed.train(1_000_000)

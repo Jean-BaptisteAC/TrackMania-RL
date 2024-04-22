@@ -102,8 +102,8 @@ class TrackmaniaEnv(Env):
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
         
-        # TEMPORARY: Dataset Restriction
-        self.save_states = self.save_states[3:5]
+        # # TEMPORARY: Dataset Restriction
+        # self.save_states = self.save_states[3:5]
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -215,7 +215,7 @@ class TrackmaniaEnv(Env):
         elif self.observation_type == "image":
 
             # HARD CODING OF: TRAINING DATASET TECH & DIRT 2
-            if self.checkpoint_id <= 18:
+            if self.training_track is not None and self.checkpoint_id <= 18:
 
                 # ROAD RADIUS ON DIRT IS APPROXIMATELY 11m 
                 x = 10*((self.min_d/11) - 0.5)
