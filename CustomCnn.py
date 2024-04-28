@@ -80,7 +80,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_General_Autonomous_Driving_Agent_1"
+    model_name = "PPO_delay_test_2"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
@@ -109,8 +109,8 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_General_Autonomous_Driving_Agent_1/245k"
-    testbed.load_agent(model_path=agent_path, step=245_000, parameters_to_change={})
+    agent_path = "models/PPO/PPO_delay_test_2/761k"
+    testbed.load_agent(model_path=agent_path, step=761_000, parameters_to_change={})
 
     # print(testbed.model.policy)
 

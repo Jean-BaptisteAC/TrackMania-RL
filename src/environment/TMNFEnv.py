@@ -164,12 +164,6 @@ class TrackmaniaEnv(Env):
         self.client.action = action
         self.last_reset_time_step += 1 
 
-        self.episode_step += 1
-        
-        screen_observation, distance_observation = self.viewer.get_obs()
-        self.render()
-        observation = self.observation(screen_observation)
-
         # Total distance in meters: (timestep in seconds) x (velocity in meters per second)
         self.total_distance += ((self.state.race_time - self.last_time_step) /1000) * (np.linalg.norm(self.velocity())/3.6)
         self.last_time_step = self.state.race_time
@@ -178,6 +172,14 @@ class TrackmaniaEnv(Env):
             min_d, eq_time = self.compute_centerline_distance()
             self.min_d = min_d
             self.eq_time = eq_time
+
+        # Add sleep in env for 30 FPS target
+        time.sleep(0.0165)
+        self.episode_step += 1
+        
+        screen_observation, distance_observation = self.viewer.get_obs()
+        self.render()
+        observation = self.observation(screen_observation)
 
         if self.training_mode == "exploration":
             reward = self.exploration_reward(distance_observation)
