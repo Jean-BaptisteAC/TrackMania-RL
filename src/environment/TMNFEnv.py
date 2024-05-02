@@ -100,6 +100,9 @@ class TrackmaniaEnv(Env):
         self.render_mode = render_mode
         self.action_mode = action_mode
 
+        self.collision_duration = 3
+        self.collision_timer = self.collision_duration
+
     def init_centerline(self):
 
         # init save_states for respawn
@@ -206,11 +209,16 @@ class TrackmaniaEnv(Env):
 
     def exploration_reward(self, distance_observation):
 
-        # velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
         velocity_reward = np.log(1 + max(0, self.velocity()[2])/70)
 
-        contact = self.state.scene_mobil.has_any_lateral_contact
-        wall_penalty = float(contact)
+        if self.client.collision:
+            self.collision_timer = self.collision_duration
+        
+        wall_penalty = int(self.collision_timer >= 0)
+
+        self.collision_timer -= 1
+        self.client.reset_collision()
+                           
 
         if self.observation_type == "lidar":
             distance_reward = abs(1 - distance_observation/0.27)
@@ -223,7 +231,7 @@ class TrackmaniaEnv(Env):
             alpha = 1.0
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
-        return reward
+        return wall_penalty
 
     
     def time_optimization_reward(self):
@@ -243,12 +251,12 @@ class TrackmaniaEnv(Env):
         info = {"checkpoint_time":False,
                 "total_distance":False}
 
-        # # Check for exit of the track
-        # if self.position[1] < 9.2:
-        #     done = True
-        #     special_reward = -10
-        #     info["total_distance"] = self.total_distance
-        #     self.reset()
+        # Check for exit of the track
+        if self.position[1] < 9.2:
+            done = True
+            special_reward = -10
+            info["total_distance"] = self.total_distance
+            self.reset()
 
         # Check for distance from centerline 
         if self.training_track is not None:

@@ -8,8 +8,8 @@ if __name__ == "__main__":
                          dimension_reduction=6, 
                          training_track=None, 
                          training_mode="exploration", 
-                         render_mode="human", 
-                         action_mode=None)
+                         render_mode=None, 
+                         action_mode="human")
 
     obs, _ = env.reset()
     i = 0
@@ -19,10 +19,13 @@ if __name__ == "__main__":
         action = [0, 0, 0]
         new_observation, reward, done, truncated, info = env.step(action)
         
-        if i == 7:
+        # if i == 7:
+        #     print(reward)
+        #     i = 0
+        # i += 1
+
+        if reward == 1:
             print(reward)
-            i = 0
-        i += 1
 
         try:
             if keyboard.is_pressed("q"):
@@ -32,4 +35,3 @@ if __name__ == "__main__":
             pass
 
 env.close()
-

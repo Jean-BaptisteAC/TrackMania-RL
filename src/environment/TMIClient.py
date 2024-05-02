@@ -28,6 +28,8 @@ class CustomClient(Client):
 
         self.rewind_state = None
         self.start_state = None
+
+        self.collision = False
         
     def on_registered(self, iface: TMInterface) -> None:
         iface.execute_command("press delete")
@@ -68,6 +70,9 @@ class CustomClient(Client):
             iface.set_input_state(**current_action)
 
         self.last_action_step += 1
+
+        if self.sim_state.scene_mobil.has_any_lateral_contact:
+            self.collision = True
         
     def on_checkpoint_count_changed(self, iface, current: int, target: int):
 
@@ -93,6 +98,9 @@ class CustomClient(Client):
         self.last_action_step = 0
         self.restart_idle = False
         self.is_idle = False
+
+    def reset_collision(self):
+        self.collision = False
 
 if __name__ == "__main__":
     
