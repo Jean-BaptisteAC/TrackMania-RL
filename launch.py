@@ -8,7 +8,8 @@ if __name__ == "__main__":
                          dimension_reduction=6, 
                          training_track=None, 
                          training_mode="exploration", 
-                         render_mode="human")
+                         render_mode="human", 
+                         action_mode=None)
 
     obs, _ = env.reset()
     i = 0

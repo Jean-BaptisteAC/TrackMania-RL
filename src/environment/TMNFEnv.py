@@ -17,9 +17,6 @@ from scipy.interpolate import interp1d
 
 import torch
  
-ControllerActionSpace = Box(
-    low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
-)
 ActType = TypeVar("ActType")
 ObsType = TypeVar("ObsType")
 
@@ -31,9 +28,14 @@ class TrackmaniaEnv(Env):
     Args:
         observation_space (str): Type of observation space. Default is "image".
         dimension_reduction (int): Dimension reduction factor for the image observation space. Default is 6.
+        training_track (str): Track used for training and data loading. Default is None.
+        training_mode (str): Mode for exploration or time optimization reward shaping. Default is exploration.
         render_mode (str): Mode for rendering the game. Default is None.
             - None: No rendering
             - "human": Rendering in a window
+        action_mode (str): Mode for action inputs. Default is None
+            - None: agent inputs
+            - "human": human inputs
     
     """
     def __init__(
@@ -43,8 +45,11 @@ class TrackmaniaEnv(Env):
         training_track: str | None = None,
         training_mode: str = "exploration",
         render_mode: str | None = None,
+        action_mode: str | None = None
     ):
-        self.action_space = ControllerActionSpace
+        self.action_space = Box(
+            low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
+        )   
 
         if observation_space == "lidar":
             self.observation_type = "lidar"
@@ -65,7 +70,7 @@ class TrackmaniaEnv(Env):
             )
 
         self.interface = TMInterface()
-        self.client = CustomClient()
+        self.client = CustomClient(action_mode)
         self.interface.set_timeout(10_000)
         self.interface.register(self.client)
 
@@ -82,8 +87,6 @@ class TrackmaniaEnv(Env):
         self.previous_centerline_positions = np.array([])
 
         self.last_reset_time_step = 0
-        
-        self.render_mode = render_mode
 
         if self.training_track is not None:
             self.init_centerline()
@@ -94,6 +97,8 @@ class TrackmaniaEnv(Env):
         self.episode_step = 0
 
         self.training_mode = training_mode
+        self.render_mode = render_mode
+        self.action_mode = action_mode
 
     def init_centerline(self):
 
@@ -101,9 +106,6 @@ class TrackmaniaEnv(Env):
         run_folder = "track_data/" + self.training_track + "/run-1"
         state_files = list(filter(lambda x: x.startswith("state"), os.listdir(run_folder)))
         self.save_states = [pickle.load(open(os.path.join(run_folder, state_file), "rb")) for state_file in state_files]
-        
-        # # TEMPORARY: Dataset Restriction
-        # self.save_states = self.save_states[3:5]
 
         # init centerline
         positions = pickle.load(open(os.path.join(run_folder, "positions.pkl"), "rb"))
@@ -204,7 +206,8 @@ class TrackmaniaEnv(Env):
 
     def exploration_reward(self, distance_observation):
 
-        velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
+        # velocity_reward = np.log(1 + np.linalg.norm(self.velocity())/70)
+        velocity_reward = np.log(1 + max(0, self.velocity()[2])/70)
 
         contact = self.state.scene_mobil.has_any_lateral_contact
         wall_penalty = float(contact)
@@ -220,7 +223,7 @@ class TrackmaniaEnv(Env):
             alpha = 1.0
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
-        return distance_reward
+        return reward
 
     
     def time_optimization_reward(self):

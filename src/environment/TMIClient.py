@@ -11,9 +11,10 @@ class CustomClient(Client):
     Client for a TMInterface instance.
     """
 
-    def __init__(self):
+    def __init__(self, action_mode):
         super().__init__()
         self.sim_state = None
+        self.action_mode = action_mode
         self.action = [0, 0, 0]
         self.last_action_step = 0
 
@@ -63,7 +64,8 @@ class CustomClient(Client):
                 self.is_idle = True
                 iface.execute_command("press delete")
 
-        # iface.set_input_state(**current_action)
+        if self.action_mode != "human":
+            iface.set_input_state(**current_action)
 
         self.last_action_step += 1
         
