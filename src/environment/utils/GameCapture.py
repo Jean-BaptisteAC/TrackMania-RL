@@ -201,7 +201,7 @@ class Image_Vision():
         total = np.concatenate((flat_left, flat_right))
         mean, std = total.mean(), total.std()
 
-        std_offset = 0.05
+        std_offset = 0.07
         flat_left = (flat_left - mean)/(std + std_offset)
         flat_right = (flat_right - mean)/(std + std_offset)
 

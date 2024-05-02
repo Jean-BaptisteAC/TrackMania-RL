@@ -215,19 +215,12 @@ class TrackmaniaEnv(Env):
             reward = velocity_reward - (alpha * distance_reward ** 2) - wall_penalty
 
         elif self.observation_type == "image":
-
-            # HARD CODING OF: TRAINING DATASET TECH & DIRT 2
-            if self.training_track is not None and self.checkpoint_id <= 18:
-
-                # ROAD RADIUS ON DIRT IS APPROXIMATELY 11m 
-                x = 10*((self.min_d/11) - 0.5)
-                distance_reward = 1/(1 + np.exp(-x)) 
-            else:
-                distance_reward = distance_observation
+  
+            distance_reward = distance_observation
             alpha = 1.0
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
-        return reward
+        return distance_reward
 
     
     def time_optimization_reward(self):

@@ -12,8 +12,8 @@ if __name__ == "__main__":
 
     model_type = "PPO"
     models_dir = "models/" + model_type
-    model_watch_name = "PPO_General_Autonomous_Driving_Agent_1"
-    model_step = "711k"
+    model_watch_name = "PPO_delay_test_2"
+    model_step = "1105k"
 
     model_path = f"{models_dir}/{model_watch_name}/{model_step}"
     model_to_watch = PPO.load(model_path, env=env)
