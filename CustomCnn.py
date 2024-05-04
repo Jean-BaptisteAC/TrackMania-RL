@@ -58,7 +58,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_FPS_Test"
+    model_name = "PPO_Train_Dataset_Tech"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,

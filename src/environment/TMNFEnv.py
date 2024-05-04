@@ -66,7 +66,7 @@ class TrackmaniaEnv(Env):
             image_shape = obs.shape
             self.observation_space = Dict(
                 {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(7, ), dtype=np.float64)}
+                 "physics": Box(low=-1.0, high=1.0, shape=(9, ), dtype=np.float64)}
             )
 
         self.interface = TMInterface()
@@ -93,7 +93,7 @@ class TrackmaniaEnv(Env):
             self.checkpoint_id = np.random.randint(len(self.save_states))
             self.episode_state = self.save_states[self.checkpoint_id]
 
-        self.episode_length = 600
+        self.episode_length = 200
         self.episode_step = 0
 
         self.training_mode = training_mode
@@ -266,7 +266,7 @@ class TrackmaniaEnv(Env):
                 self.reset()
 
         # Check for complete stop of the car
-        if self.last_reset_time_step >= 60:
+        if self.last_reset_time_step >= 20:
             if self.velocity()[2] < 1:
                 done = True
                 special_reward = -10
@@ -341,6 +341,10 @@ class TrackmaniaEnv(Env):
 
         turning_rate = self.state.scene_mobil.turning_rate
 
+        is_sliding = self.state.scene_mobil.is_sliding
+
+        input_brake = int(self.state.scene_mobil.input_brake > 0.5)
+
         ground_contact = self.has_ground_contact()
 
         lateral_contact = float(self.state.scene_mobil.has_any_lateral_contact)
@@ -350,6 +354,8 @@ class TrackmaniaEnv(Env):
                          pitch_angle,
                          roll_angle,
                          turning_rate,
+                         is_sliding, 
+                         input_brake,
                          ground_contact,
                          lateral_contact])
 
@@ -424,8 +430,6 @@ class TrackmaniaEnv(Env):
         d_y = (y[glob_min_idx] - current_position[1])/2
         d_z = z[glob_min_idx] - current_position[2]
         min_d = np.linalg.norm([d_x, d_y, d_z]) 
-
-        # print(glob_min_idx)
 
         eq_time = alpha2[glob_min_idx]*self.finish_time
 
