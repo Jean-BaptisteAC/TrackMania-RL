@@ -22,18 +22,6 @@ class CNN_Extractor(BaseFeaturesExtractor):
         super().__init__(observation_space, features_dim)
         n_input_channels = observation_space["image"].shape[0]
 
-        self.linesight_cnn = nn.Sequential(
-            nn.Conv2d(in_channels=n_input_channels, out_channels=16, kernel_size=(4, 4), stride=2),
-            nn.LeakyReLU(inplace=True),
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(4, 4), stride=2),
-            nn.LeakyReLU(inplace=True),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), stride=2),
-            nn.LeakyReLU(inplace=True),
-            nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), stride=1),
-            nn.LeakyReLU(inplace=True),
-            nn.Flatten(),
-        )
-
         self.linesight_cnn_upgraded = nn.Sequential(
             nn.Conv2d(in_channels=n_input_channels, out_channels=32, kernel_size=(5, 5), stride=2),
             nn.LeakyReLU(inplace=True),
@@ -46,16 +34,6 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.Flatten(),
         )
 
-
-        self.nature_cnn = nn.Sequential(
-            nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
-            nn.ReLU(),
-            nn.Flatten(),
-        )
 
         # Compute shape by doing one forward pass
         with th.no_grad():
@@ -80,11 +58,11 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_delay_test_2"
+    model_name = "PPO_FPS_Test"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"Training_Dataset_Tech&Dirt_2", 
+                       "training_track":"Training_Dataset_Tech", 
                        "training_mode":"exploration"}
     
 
@@ -109,8 +87,8 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_delay_test_2/761k"
-    testbed.load_agent(model_path=agent_path, step=761_000, parameters_to_change={})
+    # agent_path = "models/PPO/PPO_delay_test_2/761k"
+    # testbed.load_agent(model_path=agent_path, step=761_000, parameters_to_change={})
 
     # print(testbed.model.policy)
 

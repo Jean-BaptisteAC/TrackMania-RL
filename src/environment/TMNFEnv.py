@@ -228,10 +228,10 @@ class TrackmaniaEnv(Env):
         elif self.observation_type == "image":
   
             distance_reward = distance_observation
-            alpha = 1.0
+            alpha = 0.5
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
-        return wall_penalty
+        return reward
 
     
     def time_optimization_reward(self):
