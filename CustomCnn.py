@@ -14,7 +14,6 @@ class CNN_Extractor(BaseFeaturesExtractor):
     :param observation_space: (gym.Space)
     :param features_dim: (int) Number of features extracted.
 
-    
         This corresponds to the number of unit for the last layer.
     """
 
@@ -87,9 +86,10 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    # agent_path = "models/PPO/PPO_delay_test_2/761k"
-    # testbed.load_agent(model_path=agent_path, step=761_000, parameters_to_change={})
+    agent_path = "models/PPO/PPO_Train_Dataset_Tech/638k"
+    testbed.load_agent(model_path=agent_path, step=638_000, parameters_to_change={})
 
     # print(testbed.model.policy)
 
     testbed.train(1_000_000)
+    

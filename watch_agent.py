@@ -8,12 +8,14 @@ if __name__ == "__main__":
     env = TrackmaniaEnv(observation_space="image", 
                         dimension_reduction=6,
                         training_track=None, 
-                        training_mode="exploration")
+                        training_mode="exploration", 
+                        render_mode=None, 
+                        action_mode=None)
 
     model_type = "PPO"
     models_dir = "models/" + model_type
     model_watch_name = "PPO_delay_test_2"
-    model_step = "1105k"
+    model_step = "638k"
 
     model_path = f"{models_dir}/{model_watch_name}/{model_step}"
     model_to_watch = PPO.load(model_path, env=env)

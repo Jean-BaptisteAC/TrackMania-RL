@@ -93,14 +93,14 @@ class TrackmaniaEnv(Env):
             self.checkpoint_id = np.random.randint(len(self.save_states))
             self.episode_state = self.save_states[self.checkpoint_id]
 
-        self.episode_length = 200
+        self.episode_length = 400
         self.episode_step = 0
 
         self.training_mode = training_mode
         self.render_mode = render_mode
         self.action_mode = action_mode
 
-        self.collision_duration = 3
+        self.collision_duration = 1
         self.collision_timer = self.collision_duration
 
     def init_centerline(self):
@@ -228,7 +228,7 @@ class TrackmaniaEnv(Env):
         elif self.observation_type == "image":
   
             distance_reward = distance_observation
-            alpha = 0.5
+            alpha = 1.0
             reward = velocity_reward - (alpha * distance_reward) - wall_penalty
         
         return reward
@@ -255,7 +255,11 @@ class TrackmaniaEnv(Env):
         if self.position[1] < 9.2:
             done = True
             special_reward = -10
-            info["total_distance"] = self.total_distance
+
+            if self.training_track is None:
+                info["total_distance"] = self.total_distance
+                self.total_distance = 0
+
             self.reset()
 
         # Check for distance from centerline 
@@ -270,15 +274,24 @@ class TrackmaniaEnv(Env):
             if self.velocity()[2] < 1:
                 done = True
                 special_reward = -10
+
+                if self.training_track is None:
+                    info["total_distance"] = self.total_distance
+                    self.total_distance = 0
+
                 self.reset()
 
         # Check for finishing in the checkpoint
         if self.client.passed_checkpoint:
-            # special_reward = 100
             self.client.passed_checkpoint = False
             if self.client.is_finish:
                 done = True    
                 info["checkpoint_time"] = self.client.time
+
+                if self.training_track is None:
+                    info["total_distance"] = self.total_distance
+                    self.total_distance = 0
+
                 self.reset()
 
         # Check for contact with barriers in lidar mode
