@@ -6,7 +6,6 @@ tminterface
 python-dotenv
 mss
 scipy
-vgamepad
 tqdm
 opencv-python
 pywin32
