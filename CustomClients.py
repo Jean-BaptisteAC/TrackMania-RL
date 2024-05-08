@@ -202,7 +202,7 @@ if __name__ == "__main__":
     print("Start")
 
     while True:
-        time.sleep(0)
+        time.sleep(0.001)
 
         if keyboard.is_pressed("q"):
             print("Keybord Interrupt")
