@@ -86,8 +86,8 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_Train_Dataset_Tech/638k"
-    testbed.load_agent(model_path=agent_path, step=638_000, parameters_to_change={})
+    agent_path = "models/PPO/PPO_Train_Dataset_Tech/945k"
+    testbed.load_agent(model_path=agent_path, step=945_000, parameters_to_change={})
 
     # print(testbed.model.policy)
 
