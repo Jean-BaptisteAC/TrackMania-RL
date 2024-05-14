@@ -57,12 +57,12 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Train_Dataset_Tech"
+    model_name = "PPO_A03_time_optimization"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"Training_Dataset_Tech", 
-                       "training_mode":"exploration"}
+                       "training_track":"A03", 
+                       "training_mode":"time_optimization"}
     
 
     save_interval = 12_288
@@ -86,10 +86,8 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_Train_Dataset_Tech/945k"
-    testbed.load_agent(model_path=agent_path, step=945_000, parameters_to_change={})
-
-    # print(testbed.model.policy)
+    agent_path = "models/PPO/PPO_Train_Dataset_Tech/1497k"
+    testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
 
     testbed.train(1_000_000)
     

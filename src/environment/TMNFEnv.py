@@ -161,6 +161,9 @@ class TrackmaniaEnv(Env):
         else:
             state = None
         self.client.respawn(state)
+
+        if self.training_mode == "time_optimization":
+            self.episode_step = 0
         
         screen_observation, _ = self.viewer.get_obs()
         observation = self.observation(screen_observation)
