@@ -30,6 +30,8 @@ class TrackmaniaEnv(Env):
         dimension_reduction (int): Dimension reduction factor for the image observation space. Default is 6.
         training_track (str): Track used for training and data loading. Default is None.
         training_mode (str): Mode for exploration or time optimization reward shaping. Default is exploration.
+            - exploration: log(velocity) reward with wall avoidance and center of track incentive
+            - time_optimization: progression based reward only
         render_mode (str): Mode for rendering the game. Default is None.
             - None: No rendering
             - "human": Rendering in a window
@@ -84,7 +86,7 @@ class TrackmaniaEnv(Env):
         self.last_time_step = 0
 
         self.previous_centerline_time = [0]
-        self.previous_centerline_positions = np.array([])
+        self.previous_centerline_positions = []
 
         self.last_reset_time_step = 0
 
@@ -93,7 +95,13 @@ class TrackmaniaEnv(Env):
             self.checkpoint_id = np.random.randint(len(self.save_states))
             self.episode_state = self.save_states[self.checkpoint_id]
 
-        self.episode_length = 400
+        
+
+        # # For exploration only
+        # self.episode_length = 400
+ 
+        # For time-optimization only
+        self.episode_length = 1000
         self.episode_step = 0
 
         self.training_mode = training_mode
@@ -281,7 +289,7 @@ class TrackmaniaEnv(Env):
                 done = True
                 special_reward = -10
 
-                if self.training_track is None:
+                if self.training_track is None or self.training_track == "time_optimization":
                     info["total_distance"] = self.total_distance
                     self.total_distance = 0
 
@@ -294,7 +302,7 @@ class TrackmaniaEnv(Env):
                 done = True    
                 info["checkpoint_time"] = self.client.time
 
-                if self.training_track is None:
+                if self.training_track is None or self.training_track == "time_optimization":
                     info["total_distance"] = self.total_distance
                     self.total_distance = 0
 
@@ -314,7 +322,7 @@ class TrackmaniaEnv(Env):
             self.reset()
 
         # Time out when max episode duration is reached 
-        if self.training_track is not None:
+        if self.training_track is not None or self.training_track == "time_optimization":
             if self.episode_step >= self.episode_length:
                 done = True
                 self.episode_step = 0

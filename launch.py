@@ -6,21 +6,25 @@ import time
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", 
                          dimension_reduction=6, 
-                         training_track=None, 
-                         training_mode="exploration", 
+                         training_track="Straight_Line", 
+                         training_mode="time_optimization", 
                          render_mode=None, 
                          action_mode="human")
 
+    i = 0
+
     while True:
-        
-        steer = np.random.random()*2 - 1 
-        acceleration = np.random.random()
-        action = [steer, acceleration, 0]
+    
+        action = [0, 0, 0]
 
         new_observation, reward, done, truncated, info = env.step(action)
 
-        if done: 
-            print(info)
+        i += 1
+
+        if i == 1:
+            print(reward)
+            i = 0
+    
 
         try:
             if keyboard.is_pressed("q"):
