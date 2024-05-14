@@ -292,7 +292,7 @@ class TrackmaniaEnv(Env):
                 done = True
                 special_reward = -10
 
-                if self.training_track is None or self.training_track == "time_optimization":
+                if self.training_track is None or self.training_mode == "time_optimization":
                     info["total_distance"] = self.total_distance
                     self.total_distance = 0
 
@@ -305,7 +305,8 @@ class TrackmaniaEnv(Env):
                 done = True    
                 info["checkpoint_time"] = self.client.time
 
-                if self.training_track is None or self.training_track == "time_optimization":
+                if self.training_track is None or self.training_mode == "time_optimization":
+                    special_reward = 10
                     info["total_distance"] = self.total_distance
                     self.total_distance = 0
 
@@ -325,7 +326,7 @@ class TrackmaniaEnv(Env):
             self.reset()
 
         # Time out when max episode duration is reached 
-        if self.training_track is not None or self.training_track == "time_optimization":
+        if self.training_track is not None or self.training_mode == "time_optimization":
             if self.episode_step >= self.episode_length:
                 done = True
                 self.episode_step = 0
