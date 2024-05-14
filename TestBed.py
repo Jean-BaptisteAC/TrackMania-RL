@@ -27,7 +27,7 @@ class RecordingCallback(BaseCallback):
         if value is not False:
             self.time_recording.append(value)
         
-        if self.num_timesteps % 2000 == 0:
+        if self.num_timesteps % 500 == 0:
             if len(self.time_recording) >= 1:
                 recorded_value = np.array(self.time_recording).mean()
                 self.logger.record("lap_time_mean", recorded_value)
@@ -39,7 +39,7 @@ class RecordingCallback(BaseCallback):
         if value is not False:
             self.distance_recording.append(value)
         
-        if self.num_timesteps % 2000 == 0:
+        if self.num_timesteps % 500 == 0:
             if len(self.distance_recording) >= 1:
                 recorded_value = np.array(self.distance_recording).mean()
                 self.logger.record("total_distance_mean", recorded_value)
