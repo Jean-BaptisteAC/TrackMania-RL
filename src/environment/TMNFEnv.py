@@ -140,6 +140,12 @@ class TrackmaniaEnv(Env):
         self.centerline = self.interpolator(self.alpha)
         self.finish_time = positions[-1]["time"]/1000
 
+        # Progression percentage along the track:
+        distance = np.cumsum(np.sqrt(np.sum( np.diff(points, axis=0)**2, axis=1)))
+        distance = np.insert(distance, 0, 0)/distance[-1]
+        self.percentage_interpolator = interp1d(distance, points, kind='slinear', axis=0)
+        self.percentage_progression_centerline = self.percentage_interpolator(self.alpha)
+
     def reset(self, seed=0):
 
         if self.training_track is not None:
@@ -418,7 +424,6 @@ class TrackmaniaEnv(Env):
         # equivalent time of the centerline
         eq_time = self.alpha[glob_min_idx]*self.finish_time
 
-
         # DOUBLE PRECISION
         min_index = max(0, glob_min_idx - 1)
         max_index = min(len(self.alpha) -1, glob_min_idx + 1)
@@ -442,8 +447,22 @@ class TrackmaniaEnv(Env):
         d_x = x[glob_min_idx] - current_position[0]
         d_y = (y[glob_min_idx] - current_position[1])/2
         d_z = z[glob_min_idx] - current_position[2]
-        min_d = np.linalg.norm([d_x, d_y, d_z]) 
+        min_d = np.linalg.norm([d_x, d_y, d_z])
 
         eq_time = alpha2[glob_min_idx]*self.finish_time
 
         return min_d, eq_time
+    
+    def compute_centerline_percentage_progression(self):
+        x = self.percentage_progression_centerline[:,0]
+        y = self.percentage_progression_centerline[:,1]
+        z = self.percentage_progression_centerline[:,2]
+
+        # compute distance
+        dis = self.distance_3D(x, y, z, self.position[0], self.position[1], self.position[2])
+        # find the minima
+        glob_min_idx = np.argmin(dis)
+
+        associated_progress = glob_min_idx/len(self.alpha)
+
+        return associated_progress
