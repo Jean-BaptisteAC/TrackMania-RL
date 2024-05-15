@@ -62,7 +62,8 @@ if __name__ == "__main__":
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
                        "training_track":"A03", 
-                       "training_mode":"time_optimization"}
+                       "training_mode":"time_optimization", 
+                       "is_testing":"False"}
     
 
     save_interval = 12_288

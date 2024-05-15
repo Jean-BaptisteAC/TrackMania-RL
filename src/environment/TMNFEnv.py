@@ -276,7 +276,7 @@ class TrackmaniaEnv(Env):
             done = True
             special_reward = -10
 
-            if self.training_track is None:
+            if self.training_track is None or self.is_testing:
                 info["total_distance"] = self.total_distance
                 info["percentage_progress"] = self.compute_centerline_percentage_progression()
                 self.total_distance = 0
