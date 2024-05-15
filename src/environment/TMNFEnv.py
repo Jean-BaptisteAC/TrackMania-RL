@@ -284,7 +284,7 @@ class TrackmaniaEnv(Env):
             self.reset()
 
         # Check for distance from centerline 
-        if self.training_track is not None:
+        if self.training_track is not None and self.is_testing is False:
             if self.min_d > 23:
                 done = True
                 special_reward = -10
@@ -340,16 +340,16 @@ class TrackmaniaEnv(Env):
 
         # Time out when max episode duration is reached 
         if self.training_track is not None or self.training_mode == "time_optimization":
-            if self.episode_step >= self.episode_length:
-                done = True
-                self.episode_step = 0
-
-                self.episode_state = random.choice(self.save_states)
-                info["total_distance"] = self.total_distance
-                info["percentage_progress"] = self.compute_centerline_percentage_progression()
-                self.total_distance = 0
-                truncated = True
-                self.reset()
+            if self.is_testing is False:
+                if self.episode_step >= self.episode_length:
+                    done = True
+                    self.episode_step = 0
+                    self.episode_state = random.choice(self.save_states)
+                    info["total_distance"] = self.total_distance
+                    info["percentage_progress"] = self.compute_centerline_percentage_progression()
+                    self.total_distance = 0
+                    truncated = True
+                    self.reset()
         
         return special_reward, done, truncated, info
     
