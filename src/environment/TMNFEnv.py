@@ -266,7 +266,8 @@ class TrackmaniaEnv(Env):
         done = False
         truncated = False
         info = {"checkpoint_time":False,
-                "total_distance":False}
+                "total_distance":False, 
+                "percentage_progress":False}
 
         # Check for exit of the track
         if self.position[1] < 9.2:
@@ -275,6 +276,7 @@ class TrackmaniaEnv(Env):
 
             if self.training_track is None:
                 info["total_distance"] = self.total_distance
+                info["percentage_progress"] = self.compute_centerline_percentage_progression()
                 self.total_distance = 0
 
             self.reset()
@@ -284,6 +286,12 @@ class TrackmaniaEnv(Env):
             if self.min_d > 23:
                 done = True
                 special_reward = -10
+
+                if self.training_track is None or self.training_mode == "time_optimization":
+                    info["total_distance"] = self.total_distance
+                    info["percentage_progress"] = self.compute_centerline_percentage_progression()
+                    self.total_distance = 0
+
                 self.reset()
 
         # Check for complete stop of the car
@@ -294,6 +302,7 @@ class TrackmaniaEnv(Env):
 
                 if self.training_track is None or self.training_mode == "time_optimization":
                     info["total_distance"] = self.total_distance
+                    info["percentage_progress"] = self.compute_centerline_percentage_progression()
                     self.total_distance = 0
 
                 self.reset()
@@ -307,7 +316,9 @@ class TrackmaniaEnv(Env):
 
                 if self.training_track is None or self.training_mode == "time_optimization":
                     special_reward = 10
+                    print("Finished")
                     info["total_distance"] = self.total_distance
+                    info["percentage_progress"] = self.compute_centerline_percentage_progression()
                     self.total_distance = 0
 
                 self.reset()
@@ -333,6 +344,7 @@ class TrackmaniaEnv(Env):
 
                 self.episode_state = random.choice(self.save_states)
                 info["total_distance"] = self.total_distance
+                info["percentage_progress"] = self.compute_centerline_percentage_progression()
                 self.total_distance = 0
                 truncated = True
                 self.reset()
