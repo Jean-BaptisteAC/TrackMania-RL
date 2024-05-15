@@ -32,13 +32,13 @@ class TrackmaniaEnv(Env):
         training_mode (str): Mode for exploration or time optimization reward shaping. Default is exploration.
             - exploration: log(velocity) reward with wall avoidance and center of track incentive
             - time_optimization: progression based reward only
+        testing (bool): Bool for training or testing
         render_mode (str): Mode for rendering the game. Default is None.
             - None: No rendering
             - "human": Rendering in a window
         action_mode (str): Mode for action inputs. Default is None
             - None: agent inputs
             - "human": human inputs
-    
     """
     def __init__(
         self,
@@ -46,8 +46,9 @@ class TrackmaniaEnv(Env):
         dimension_reduction: int = 6,
         training_track: str | None = None,
         training_mode: str = "exploration",
+        is_testing: bool = False,
         render_mode: str | None = None,
-        action_mode: str | None = None
+        action_mode: str | None = None, 
     ):
         self.action_space = Box(
             low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
@@ -105,6 +106,7 @@ class TrackmaniaEnv(Env):
         self.episode_step = 0
 
         self.training_mode = training_mode
+        self.is_testing = is_testing
         self.render_mode = render_mode
         self.action_mode = action_mode
 
