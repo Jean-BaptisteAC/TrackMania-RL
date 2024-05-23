@@ -19,9 +19,11 @@ class CNN_Extractor(BaseFeaturesExtractor):
 
     def __init__(self, observation_space: spaces.Dict, features_dim: int = 64):
         super().__init__(observation_space, features_dim)
+        
         n_input_channels = observation_space["image"].shape[0]
+        self.input_size = observation_space["image"]
 
-        self.linesight_cnn_upgraded = nn.Sequential(
+        self.cnn_upgraded = nn.Sequential(
             nn.Conv2d(in_channels=n_input_channels, out_channels=32, kernel_size=(5, 5), stride=2),
             nn.LeakyReLU(inplace=True),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(5, 5), stride=2),
@@ -33,10 +35,22 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.Flatten(),
         )
 
+        self.cnn_base = nn.Sequential(
+            nn.Conv2d(in_channels=n_input_channels, out_channels=16, kernel_size=(5, 5), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=(5, 5), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(in_channels=64, out_channels=32, kernel_size=(3, 3), stride=1),
+            nn.LeakyReLU(inplace=True),
+            nn.Flatten(),
+        )
+
 
         # Compute shape by doing one forward pass
         with th.no_grad():
-            n_flatten = self.linesight_cnn_upgraded(
+            n_flatten = self.cnn_base(
                 th.as_tensor(observation_space["image"].sample()[None]).float()
             ).shape[1]
 
@@ -47,7 +61,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
             )
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
-        image_embedding = self.cnn_head(self.linesight_cnn_upgraded(observation["image"]))
+        image_embedding = self.cnn_head(self.cnn_base(observation["image"]))
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
 
@@ -57,12 +71,12 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_A03_time_optimization_2"
+    model_name = "PPO_Training_Dataset_Tech_2_small_CNN"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"A03", 
-                       "training_mode":"time_optimization", 
+                       "training_track":"Training_Dataset_Tech_2",
+                       "training_mode":"exploration",
                        "is_testing":"False"}
     
 
@@ -87,8 +101,10 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    agent_path = "models/PPO/PPO_Train_Dataset_Tech/1497k"
-    testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
+    # print(testbed.model.policy)
+    
+    # agent_path = "models/PPO/PPO_Train_Dataset_Tech/1497k"
+    # testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
 
     testbed.train(1_000_000)
     

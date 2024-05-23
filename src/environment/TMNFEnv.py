@@ -318,7 +318,6 @@ class TrackmaniaEnv(Env):
 
                 if self.training_track is None or self.training_mode == "time_optimization":
                     special_reward = 10
-                    print("Finished")
                     info["total_distance"] = self.total_distance
                     info["percentage_progress"] = self.compute_centerline_percentage_progression()
                     self.total_distance = 0
