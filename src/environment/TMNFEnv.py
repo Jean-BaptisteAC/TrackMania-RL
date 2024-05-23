@@ -97,12 +97,14 @@ class TrackmaniaEnv(Env):
             self.episode_state = self.save_states[self.checkpoint_id]
 
         
-
-        # # For exploration only
-        # self.episode_length = 400
+        if self.training_mode == "exploration":
+            # For exploration only
+            self.episode_length = 400
  
-        # For time-optimization only
-        self.episode_length = 1000
+        elif self.training_mode == "time_optimization":
+            # For time_optimization only
+            self.episode_length = 1000
+            
         self.episode_step = 0
 
         self.training_mode = training_mode
