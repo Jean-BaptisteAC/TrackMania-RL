@@ -77,7 +77,7 @@ if __name__ == "__main__":
                        "dimension_reduction":6,
                        "training_track":"Training_Dataset_Tech_2",
                        "training_mode":"exploration",
-                       "is_testing":"False"}
+                       "is_testing":False}
     
 
     save_interval = 12_288
@@ -103,8 +103,8 @@ if __name__ == "__main__":
     
     # print(testbed.model.policy)
     
-    # agent_path = "models/PPO/PPO_Train_Dataset_Tech/1497k"
-    # testbed.load_agent(model_path=agent_path, step=0, parameters_to_change={})
+    agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/626k"
+    testbed.load_agent(model_path=agent_path, step=626_000, parameters_to_change={})
 
     testbed.train(1_000_000)
     

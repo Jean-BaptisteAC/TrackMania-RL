@@ -96,7 +96,7 @@ class TrackmaniaEnv(Env):
             self.checkpoint_id = np.random.randint(len(self.save_states))
             self.episode_state = self.save_states[self.checkpoint_id]
 
-        
+        self.training_mode = training_mode
         if self.training_mode == "exploration":
             # For exploration only
             self.episode_length = 400
@@ -104,10 +104,11 @@ class TrackmaniaEnv(Env):
         elif self.training_mode == "time_optimization":
             # For time_optimization only
             self.episode_length = 1000
-            
-        self.episode_step = 0
 
-        self.training_mode = training_mode
+        print(self.episode_length)
+
+        self.episode_step = 0
+        
         self.is_testing = is_testing
         self.render_mode = render_mode
         self.action_mode = action_mode
@@ -199,7 +200,7 @@ class TrackmaniaEnv(Env):
             self.min_d = min_d
             self.eq_time = eq_time
 
-        # Add sleep in env for 30 FPS target
+        # Add sleep in env for 20 FPS target
         time.sleep(0.0165)
         self.episode_step += 1
         
