@@ -105,8 +105,6 @@ class TrackmaniaEnv(Env):
             # For time_optimization only
             self.episode_length = 1000
 
-        print(self.episode_length)
-
         self.episode_step = 0
         
         self.is_testing = is_testing
