@@ -255,12 +255,24 @@ class TrackmaniaEnv(Env):
 
     
     def time_optimization_reward(self):
+
+        if self.client.collision:
+            self.collision_timer = self.collision_duration
         
-        reward = self.eq_time - self.previous_centerline_time[0]
+        wall_penalty = int(self.collision_timer >= 0)
+
+        self.collision_timer -= 1
+        self.client.reset_collision()
+        
+        progress_reward = self.eq_time - self.previous_centerline_time[0]
         self.previous_centerline_time.append(self.eq_time)
-        if len(self.previous_centerline_time) > 5:
+        if len(self.previous_centerline_time) > 3:
             self.previous_centerline_time.pop(0)
-        
+
+        # distance_reward = self.min_d/11.6 # Average Radius of the road
+
+        collision_reward = min(1, wall_penalty*((np.linalg.norm(self.velocity())/300)**2))
+        reward = 4*progress_reward - 2*collision_reward
         return reward
 
 
