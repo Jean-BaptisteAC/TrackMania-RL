@@ -152,6 +152,7 @@ if __name__ == "__main__":
     seed=0
     learning_rate = 1e-4
     use_sde = True
+    n_steps = 2048
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
@@ -161,7 +162,8 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs,
                       seed=seed,
                       learning_rate=learning_rate, 
-                      use_sde=use_sde)
+                      use_sde=use_sde, 
+                      n_steps=n_steps)
     
     # print(testbed.model.policy)
     
