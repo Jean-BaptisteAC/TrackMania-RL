@@ -71,12 +71,12 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Training_Dataset_Tech_2_small_CNN"
+    model_name = "PPO_A03_time_optimization_small_cnn_from_scratch"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"Training_Dataset_Tech_2",
-                       "training_mode":"exploration",
+                       "training_track":"A03",
+                       "training_mode":"time_optimization",
                        "is_testing":False}
     
 
@@ -103,8 +103,8 @@ if __name__ == "__main__":
     
     # print(testbed.model.policy)
     
-    agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/626k"
-    testbed.load_agent(model_path=agent_path, step=626_000, parameters_to_change={})
+    # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
+    # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
 
     testbed.train(1_000_000)
     

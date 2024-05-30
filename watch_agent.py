@@ -7,15 +7,16 @@ if __name__ == "__main__":
 
     env = TrackmaniaEnv(observation_space="image", 
                         dimension_reduction=6,
-                        training_track=None, 
+                        training_track="A03", 
                         training_mode="exploration", 
                         render_mode=None, 
+                        is_testing=True,
                         action_mode=None)
 
     model_type = "PPO"
     models_dir = "models/" + model_type
-    model_watch_name = "PPO_Train_Dataset_Tech"
-    model_step = "1497k"
+    model_watch_name = "PPO_A03_time_optimization_small_cnn_new_reward"
+    model_step = "2075k"
 
     model_path = f"{models_dir}/{model_watch_name}/{model_step}"
     model_to_watch = PPO.load(model_path, env=env)
