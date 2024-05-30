@@ -13,6 +13,8 @@ if __name__ == "__main__":
 
     i = 0
 
+    obs, _ = env.reset()
+
     while True:
     
         action = [0, 0, 0]

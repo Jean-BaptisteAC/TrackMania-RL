@@ -5,7 +5,7 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from gymnasium import spaces
 import torch as th
 from torch import nn
-from torchvision import datasets, transforms, models
+from torchvision import transforms, models
 
 from TestBed import TestBed
 
@@ -84,8 +84,6 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
 
         self.preprocess = transforms.Compose([
             transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
@@ -122,12 +120,12 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
             )
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
-        preprocessed_image = self.preprocess(observation["image"])
-        preprocessed_image = preprocessed_image.unsqueeze(0)
-        image_embedding = self.resnet18(preprocessed_image)
+        
+        image = observation["image"]
+        preprocessed_image = self.preprocess(image)
+        image_embedding = self.cnn_head(self.resnet18(preprocessed_image))
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
-
 
 if __name__ == "__main__":
 
@@ -168,5 +166,5 @@ if __name__ == "__main__":
     # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
     # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
 
-    # testbed.train(1_000_000)
+    testbed.train(1_000_000)
     

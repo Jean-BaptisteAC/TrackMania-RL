@@ -171,7 +171,6 @@ class Image_Vision():
         self.get_frame()
         # Image in shape (H, W, 1) pixels value in [0, 255] because SB3 automatically scales the features for images
         observation = self.frame
-        print(observation.shape)
         
         asymmetry = self.get_asymmetry()
         return observation, asymmetry
