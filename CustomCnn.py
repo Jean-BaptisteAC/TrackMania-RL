@@ -5,6 +5,7 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from gymnasium import spaces
 import torch as th
 from torch import nn
+from torchvision import datasets, transforms, models
 
 from TestBed import TestBed
 
@@ -46,7 +47,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.LeakyReLU(inplace=True),
             nn.Flatten(),
         )
-        
+
 
 
         # Compute shape by doing one forward pass
@@ -65,6 +66,58 @@ class CNN_Extractor(BaseFeaturesExtractor):
         image_embedding = self.cnn_head(self.cnn_base(observation["image"]))
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
+    
+
+class CNN_Extractor_Resnet(BaseFeaturesExtractor):
+    """
+    :param observation_space: (gym.Space)
+    :param features_dim: (int) Number of features extracted.
+
+        This corresponds to the number of unit for the last layer.
+    """
+
+    def __init__(self, observation_space: spaces.Dict, features_dim: int = 64):
+        super().__init__(observation_space, features_dim)
+        
+        n_input_channels = observation_space["image"].shape[0]
+        self.input_size = observation_space["image"]
+
+        # RESNET
+        self.resnet18 = models.resnet18(pretrained=True)
+        for name, param in self.resnet18.named_parameters():
+            if "fc" in name:  # Unfreeze the final classification layer
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+
+        # NATURE CNN
+        self.nature_cnn = nn.Sequential(
+            nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+            nn.ReLU(),
+            nn.Flatten(),
+        )
+
+
+        # Compute shape by doing one forward pass
+        with th.no_grad():
+            n_flatten = self.resnet18(
+                th.as_tensor(observation_space["image"].sample()[None]).float()
+            ).shape[1]
+
+        physics_shape = observation_space["physics"].shape[0]
+        self.cnn_head = nn.Sequential(
+            nn.Linear(n_flatten, features_dim - physics_shape), 
+            nn.ReLU()
+            )
+    
+    def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
+        image_embedding = self.resnet18(self.cnn_base(observation["image"]))
+        embedding = th.cat([image_embedding, observation["physics"]], dim=1)
+        return embedding
 
 
 if __name__ == "__main__":
@@ -72,7 +125,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_A03_time_optimization_small_cnn_from_scratch"
+    model_name = "PPO_resnet"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
@@ -83,7 +136,7 @@ if __name__ == "__main__":
 
     save_interval = 12_288
     policy_kwargs = dict(
-        features_extractor_class=CNN_Extractor,
+        features_extractor_class=CNN_Extractor_Resnet,
         features_extractor_kwargs=dict(features_dim=256),
         activation_fn=th.nn.Tanh, 
         net_arch=[256, 256],
@@ -102,10 +155,10 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    # print(testbed.model.policy)
+    print(testbed.model.policy)
     
     # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
     # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
 
-    testbed.train(1_000_000)
+    # testbed.train(1_000_000)
     
