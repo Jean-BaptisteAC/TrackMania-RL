@@ -46,6 +46,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
             nn.LeakyReLU(inplace=True),
             nn.Flatten(),
         )
+        
 
 
         # Compute shape by doing one forward pass
