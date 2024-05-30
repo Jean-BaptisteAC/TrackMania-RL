@@ -84,7 +84,7 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         self.input_size = observation_space["image"]
 
         self.preprocess = transforms.Compose([
-            transforms.Resize(256),
+            # transforms.Resize(256),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
@@ -107,25 +107,13 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
             nn.ReLU(),
             nn.Flatten(),
         )
-
-
-        # Compute shape by doing one forward pass
-        with th.no_grad():
-            n_flatten = self.resnet18(
-                th.as_tensor(observation_space["image"].sample()[None]).float()
-            ).shape[1]
-
-        physics_shape = observation_space["physics"].shape[0]
-        self.cnn_head = nn.Sequential(
-            nn.Linear(n_flatten, features_dim - physics_shape), 
-            nn.ReLU()
-            )
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
         
         image = observation["image"]
+        print(image[0][0])
         preprocessed_image = self.preprocess(image)
-        image_embedding = self.cnn_head(self.resnet18(preprocessed_image))
+        image_embedding = self.resnet18(preprocessed_image)
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
 
@@ -134,7 +122,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_resnet"
+    model_name = "PPO_resnet_pretrain"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
@@ -145,7 +133,7 @@ if __name__ == "__main__":
     save_interval = 12_288
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor_Resnet,
-        features_extractor_kwargs=dict(features_dim=256),
+        features_extractor_kwargs=dict(features_dim=1009),
         activation_fn=th.nn.Tanh, 
         net_arch=[256, 256],
     )   
