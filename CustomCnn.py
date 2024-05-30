@@ -6,6 +6,7 @@ from gymnasium import spaces
 import torch as th
 from torch import nn
 from torchvision import transforms, models
+from torchvision.models import ResNet18_Weights
 
 from TestBed import TestBed
 
@@ -88,7 +89,8 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         ])
 
         # RESNET
-        self.resnet18 = models.resnet18()
+        self.resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+        
         for name, param in self.resnet18.named_parameters():
             if "fc" in name:  # Unfreeze the final classification layer
                 param.requires_grad = True
