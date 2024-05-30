@@ -82,8 +82,15 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         n_input_channels = observation_space["image"].shape[0]
         self.input_size = observation_space["image"]
 
+        self.preprocess = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
         # RESNET
-        self.resnet18 = models.resnet18(pretrained=True)
+        self.resnet18 = models.resnet18()
         for name, param in self.resnet18.named_parameters():
             if "fc" in name:  # Unfreeze the final classification layer
                 param.requires_grad = True
@@ -115,7 +122,9 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
             )
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
-        image_embedding = self.resnet18(self.cnn_base(observation["image"]))
+        preprocessed_image = self.preprocess(observation["image"])
+        preprocessed_image = preprocessed_image.unsqueeze(0)
+        image_embedding = self.resnet18(preprocessed_image)
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
 
@@ -133,7 +142,6 @@ if __name__ == "__main__":
                        "training_mode":"time_optimization",
                        "is_testing":False}
     
-
     save_interval = 12_288
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor_Resnet,
@@ -155,7 +163,7 @@ if __name__ == "__main__":
                       learning_rate=learning_rate, 
                       use_sde=use_sde)
     
-    print(testbed.model.policy)
+    # print(testbed.model.policy)
     
     # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
     # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})

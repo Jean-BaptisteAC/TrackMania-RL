@@ -137,14 +137,8 @@ class Image_Vision():
         bounding_box = left, top, right, bottom
         with mss() as sct:
             frame = np.array(sct.grab(bounding_box)) 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        dim = (int(frame.shape[1]/self.dimension_reduction),
-               int(frame.shape[0]/self.dimension_reduction))
-    
-
-        if dim[0] % 2 == 1:
-            dim = (dim[0] + 1, dim[1])
-        
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+        dim = (224, 224)
         frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
         self.frame = frame
 
@@ -176,8 +170,8 @@ class Image_Vision():
     def get_obs(self):
         self.get_frame()
         # Image in shape (H, W, 1) pixels value in [0, 255] because SB3 automatically scales the features for images
-        observation = np.reshape(np.array(self.frame), 
-                                 (self.frame.shape[0],self.frame.shape[1] , 1))
+        observation = self.frame
+        print(observation.shape)
         
         asymmetry = self.get_asymmetry()
         return observation, asymmetry
