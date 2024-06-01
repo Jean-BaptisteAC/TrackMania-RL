@@ -98,16 +98,16 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
             else:
                 param.requires_grad = False
 
-        # NATURE CNN
-        self.nature_cnn = nn.Sequential(
-            nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
-            nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
-            nn.ReLU(),
-            nn.Flatten(),
-        )
+        # # NATURE CNN
+        # self.nature_cnn = nn.Sequential(
+        #     nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+        #     nn.ReLU(),
+        #     nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+        #     nn.ReLU(),
+        #     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+        #     nn.ReLU(),
+        #     nn.Flatten(),
+        # )
 
         print("INITALISATION:")
         print(self.resnet18.conv1.weight[0][0])
@@ -167,6 +167,42 @@ if __name__ == "__main__":
     
     # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
     # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
+    
+    
+    # CHANGE WEIGHTS FOR RESNET18
+    
+    def create_resnet18_state_dict(dict_name, resnet18):
+        dictionary = {}
+        for layer_name in resnet18.state_dict():
+            modified_name = f"{dict_name}.resnet18.{layer_name}"
+            dictionary[modified_name] = resnet18.state_dict()[layer_name]
+        return dictionary
+    
+    resnet18 = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    resnet18.to("cuda")
+
+    for name, param in resnet18.named_parameters():
+        if "fc" in name:  # Unfreeze the final classification layer
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+
+    resnet18_state_dict_pi_features_extractor = create_resnet18_state_dict("pi_features_extractor", resnet18)
+    resnet18_state_dict_vf_features_extractor = create_resnet18_state_dict("vf_features_extractor", resnet18)
+    resnet18_state_dict_features_extractor = create_resnet18_state_dict("features_extractor", resnet18)
+
+    policy_state_dict_copy = testbed.model.policy.state_dict().copy()
+    for name in policy_state_dict_copy:
+        if name in resnet18_state_dict_pi_features_extractor:
+            policy_state_dict_copy[name] = resnet18_state_dict_pi_features_extractor[name]
+
+        if name in resnet18_state_dict_vf_features_extractor:
+            policy_state_dict_copy[name] = resnet18_state_dict_vf_features_extractor[name]
+
+        if name in resnet18_state_dict_features_extractor:
+            policy_state_dict_copy[name] = resnet18_state_dict_features_extractor[name]
+
+    testbed.model.policy.load_state_dict(policy_state_dict_copy, assign=True)
 
     testbed.train(1_000_000)
     
