@@ -89,7 +89,7 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         ])
 
         # RESNET
-        self.resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+        self.resnet18 = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
         
         for name, param in self.resnet18.named_parameters():
             if "fc" in name:  # Unfreeze the final classification layer
