@@ -108,6 +108,9 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
             nn.ReLU(),
             nn.Flatten(),
         )
+
+        print("INITALISATION:")
+        print(self.resnet18.conv1.weight[0][0])
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
         
@@ -115,6 +118,8 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         #     save_image = observation["image"].cpu().numpy() 
         #     save_image = Image.fromarray(save_image) 
         #     save_image.save("save_image.jpg") 
+
+        print(self.resnet18.conv1.weight[0][0])
 
         image = observation["image"]
         preprocessed_image = self.preprocess(image)
