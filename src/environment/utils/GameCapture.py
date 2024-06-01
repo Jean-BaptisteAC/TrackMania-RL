@@ -138,10 +138,6 @@ class Image_Vision():
         with mss() as sct:
             frame = np.array(sct.grab(bounding_box)) 
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        dim = (224, 224)
-        frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
         self.frame = frame
 
     # No restart when touching the boarders

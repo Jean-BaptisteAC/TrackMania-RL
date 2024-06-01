@@ -83,10 +83,7 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         n_input_channels = observation_space["image"].shape[0]
         self.input_size = observation_space["image"]
 
-        self.preprocess = transforms.Compose([
-            # transforms.Resize(256),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        self.preprocess = ResNet18_Weights.IMAGENET1K_V1.transforms
 
         # RESNET
         self.resnet18 = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
