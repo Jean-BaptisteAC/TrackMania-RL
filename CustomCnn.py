@@ -119,8 +119,6 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         #     save_image = Image.fromarray(save_image) 
         #     save_image.save("save_image.jpg") 
 
-        print(self.resnet18.conv1.weight[0][0])
-
         image = observation["image"]
         preprocessed_image = self.preprocess(image)
         image_embedding = self.resnet18(preprocessed_image)
@@ -132,7 +130,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_resnet_TEST"
+    model_name = "PPO_resnet_true_weights"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
@@ -150,7 +148,7 @@ if __name__ == "__main__":
     seed=0
     learning_rate = 1e-4
     use_sde = True
-    n_steps = 2048
+    n_steps = 512
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
@@ -160,7 +158,7 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs,
                       seed=seed,
                       learning_rate=learning_rate, 
-                      use_sde=use_sde, 
+                      use_sde=use_sde,
                       n_steps=n_steps)
     
     # print(testbed.model.policy)
@@ -202,7 +200,12 @@ if __name__ == "__main__":
         if name in resnet18_state_dict_features_extractor:
             policy_state_dict_copy[name] = resnet18_state_dict_features_extractor[name]
 
-    testbed.model.policy.load_state_dict(policy_state_dict_copy, assign=True)
+    # testbed.model.policy.load_state_dict(policy_state_dict_copy, assign=True)
+    testbed.model.set_parameters({"policy": policy_state_dict_copy}, exact_match = False)
+
+    for name, param in testbed.model.policy.named_parameters():
+        if "resnet18" in name and "fc" not in name:
+            param.require_grad = False
 
     testbed.train(1_000_000)
     
