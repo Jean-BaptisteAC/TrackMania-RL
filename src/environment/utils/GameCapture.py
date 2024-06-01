@@ -117,9 +117,9 @@ class Image_Vision():
         self.hwnd = wind32.FindWindow(None, os.getenv('GAME_WINDOW_NAME'))
 
         # Crop the screenshot to remove unecessary information and reduce dimensionality
-        self.lateral_margin = 10 + 2
-        self.upper_margin = 40 + 150
-        self.lower_margin = 10 + 50
+        self.lateral_margin = 10 + 83
+        self.upper_margin = 40 + 3
+        self.lower_margin = 10 + 2
         self.dimension_reduction = dimension_reduction
             
         self.get_frame()
@@ -138,6 +138,8 @@ class Image_Vision():
         with mss() as sct:
             frame = np.array(sct.grab(bounding_box)) 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
+        print(frame.shape)
+
         dim = (224, 224)
         frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
         self.frame = frame
