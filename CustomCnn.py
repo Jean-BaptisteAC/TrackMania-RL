@@ -10,6 +10,8 @@ from torchvision.models import ResNet18_Weights
 
 from TestBed import TestBed
 
+from PIL import Image
+
 # Simple CNN taken from the SB3 custom Policy example
 class CNN_Extractor(BaseFeaturesExtractor):
     """
@@ -83,7 +85,9 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         n_input_channels = observation_space["image"].shape[0]
         self.input_size = observation_space["image"]
 
-        self.preprocess = ResNet18_Weights.IMAGENET1K_V1.transforms
+        self.preprocess = ResNet18_Weights.IMAGENET1K_V1.transforms(antialias=True)
+
+        self.image_is_saved = False
 
         # RESNET
         self.resnet18 = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
@@ -107,6 +111,11 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
     
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
         
+        # if self.image_is_saved is False: 
+        #     save_image = observation["image"].cpu().numpy() 
+        #     save_image = Image.fromarray(save_image) 
+        #     save_image.save("save_image.jpg") 
+
         image = observation["image"]
         preprocessed_image = self.preprocess(image)
         image_embedding = self.resnet18(preprocessed_image)
@@ -118,7 +127,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_resnet_pretrain"
+    model_name = "PPO_resnet_TEST"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
