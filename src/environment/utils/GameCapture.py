@@ -137,7 +137,7 @@ class Image_Vision():
         bounding_box = left, top, right, bottom
         with mss() as sct:
             frame = np.array(sct.grab(bounding_box)) 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
         dim = (224, 224)
         frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
         self.frame = frame
@@ -150,16 +150,10 @@ class Image_Vision():
     def show(self):
         frame = self.frame
         
-        dim = (int(frame.shape[1]*self.dimension_reduction),
-               int(frame.shape[0]*self.dimension_reduction))
-        cv2.imshow("frame", cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST))
+        cv2.imshow("frame", frame)
 
-        
-        left_right_dim = (int(self.left.shape[1]*self.dimension_reduction),
-                          int(self.left.shape[0]*self.dimension_reduction))
-
-        cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
-        cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
+        cv2.imshow("left", self.left)
+        cv2.imshow("right", self.left)
         
         if (cv2.waitKey(1) & 0xFF) == ord("q"):
             cv2.destroyAllWindows()

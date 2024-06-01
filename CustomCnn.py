@@ -111,7 +111,6 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
     def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
         
         image = observation["image"]
-        print(image[0][0])
         preprocessed_image = self.preprocess(image)
         image_embedding = self.resnet18(preprocessed_image)
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
