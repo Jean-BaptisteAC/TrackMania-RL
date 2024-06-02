@@ -142,6 +142,7 @@ if __name__ == "__main__":
     policy_kwargs = dict(
         features_extractor_class=CNN_Extractor_Resnet,
         features_extractor_kwargs=dict(features_dim=1009),
+        normalized_images=False,
         activation_fn=th.nn.Tanh, 
         net_arch=[256, 256],
     )   
@@ -163,49 +164,48 @@ if __name__ == "__main__":
     
     # print(testbed.model.policy)
     
-    # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
-    # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
+    agent_path = "models/PPO/PPO_resnet_true_weights/24k"
+    testbed.load_agent(model_path=agent_path, step=24_000, parameters_to_change={})
     
     
-    # CHANGE WEIGHTS FOR RESNET18
+    # # CHANGE WEIGHTS FOR RESNET18
     
-    def create_resnet18_state_dict(dict_name, resnet18):
-        dictionary = {}
-        for layer_name in resnet18.state_dict():
-            modified_name = f"{dict_name}.resnet18.{layer_name}"
-            dictionary[modified_name] = resnet18.state_dict()[layer_name]
-        return dictionary
+    # def create_resnet18_state_dict(dict_name, resnet18):
+    #     dictionary = {}
+    #     for layer_name in resnet18.state_dict():
+    #         modified_name = f"{dict_name}.resnet18.{layer_name}"
+    #         dictionary[modified_name] = resnet18.state_dict()[layer_name]
+    #     return dictionary
     
-    resnet18 = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-    resnet18.to("cuda")
+    # resnet18 = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    # resnet18.to("cuda")
 
-    for name, param in resnet18.named_parameters():
-        if "fc" in name:  # Unfreeze the final classification layer
-            param.requires_grad = True
-        else:
-            param.requires_grad = False
+    # for name, param in resnet18.named_parameters():
+    #     if "fc" in name:  # Unfreeze the final classification layer
+    #         param.requires_grad = True
+    #     else:
+    #         param.requires_grad = False
 
-    resnet18_state_dict_pi_features_extractor = create_resnet18_state_dict("pi_features_extractor", resnet18)
-    resnet18_state_dict_vf_features_extractor = create_resnet18_state_dict("vf_features_extractor", resnet18)
-    resnet18_state_dict_features_extractor = create_resnet18_state_dict("features_extractor", resnet18)
+    # resnet18_state_dict_pi_features_extractor = create_resnet18_state_dict("pi_features_extractor", resnet18)
+    # resnet18_state_dict_vf_features_extractor = create_resnet18_state_dict("vf_features_extractor", resnet18)
+    # resnet18_state_dict_features_extractor = create_resnet18_state_dict("features_extractor", resnet18)
 
-    policy_state_dict_copy = testbed.model.policy.state_dict().copy()
-    for name in policy_state_dict_copy:
-        if name in resnet18_state_dict_pi_features_extractor:
-            policy_state_dict_copy[name] = resnet18_state_dict_pi_features_extractor[name]
+    # policy_state_dict_copy = testbed.model.policy.state_dict().copy()
+    # for name in policy_state_dict_copy:
+    #     if name in resnet18_state_dict_pi_features_extractor:
+    #         policy_state_dict_copy[name] = resnet18_state_dict_pi_features_extractor[name]
 
-        if name in resnet18_state_dict_vf_features_extractor:
-            policy_state_dict_copy[name] = resnet18_state_dict_vf_features_extractor[name]
+    #     if name in resnet18_state_dict_vf_features_extractor:
+    #         policy_state_dict_copy[name] = resnet18_state_dict_vf_features_extractor[name]
 
-        if name in resnet18_state_dict_features_extractor:
-            policy_state_dict_copy[name] = resnet18_state_dict_features_extractor[name]
+    #     if name in resnet18_state_dict_features_extractor:
+    #         policy_state_dict_copy[name] = resnet18_state_dict_features_extractor[name]
 
-    # testbed.model.policy.load_state_dict(policy_state_dict_copy, assign=True)
-    testbed.model.set_parameters({"policy": policy_state_dict_copy}, exact_match = False)
+    # testbed.model.set_parameters({"policy": policy_state_dict_copy}, exact_match = False)
 
-    for name, param in testbed.model.policy.named_parameters():
-        if "resnet18" in name and "fc" not in name:
-            param.require_grad = False
+    # for name, param in testbed.model.policy.named_parameters():
+    #     if "resnet18" in name and "fc" not in name:
+    #         param.require_grad = False
 
     testbed.train(1_000_000)
     
