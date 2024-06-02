@@ -139,6 +139,7 @@ class Image_Vision():
             frame = np.array(sct.grab(bounding_box)) 
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         frame = cv2.resize(frame, (256, 256))
+        # print(frame[0][0])
         self.frame = frame
 
     # No restart when touching the boarders
