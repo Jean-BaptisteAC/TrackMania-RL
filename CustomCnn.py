@@ -71,7 +71,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_A03_time_optimization_small_cnn_from_scratch"
+    model_name = "PPO_C01_TO_speed=1"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
@@ -90,6 +90,7 @@ if __name__ == "__main__":
     seed=0
     learning_rate = 1e-4
     use_sde = True
+    n_steps = 2048
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
@@ -99,12 +100,13 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs,
                       seed=seed,
                       learning_rate=learning_rate, 
-                      use_sde=use_sde)
+                      use_sde=use_sde, 
+                      n_steps=n_steps)
     
     # print(testbed.model.policy)
     
-    # agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
-    # testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
+    agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
+    testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
 
     testbed.train(1_000_000)
     
