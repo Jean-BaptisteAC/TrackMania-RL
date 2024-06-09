@@ -71,11 +71,11 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_C01_TO_speed=1"
+    model_name = "PPO_C01_TO_speed=1.2"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,
-                       "training_track":"A03",
+                       "training_track":"C01",
                        "training_mode":"time_optimization",
                        "is_testing":False}
     
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # print(testbed.model.policy)
     
     agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
-    testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={})
+    testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={"n_steps":2048})
 
     testbed.train(1_000_000)
     

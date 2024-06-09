@@ -103,7 +103,7 @@ class TrackmaniaEnv(Env):
  
         elif self.training_mode == "time_optimization":
             # For time_optimization only
-            self.episode_length = 1000
+            self.episode_length = 2048
 
         self.episode_step = 0
         
