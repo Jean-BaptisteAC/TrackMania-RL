@@ -10,7 +10,6 @@ from torchvision.models import ResNet18_Weights
 
 from TestBed import TestBed
 
-from PIL import Image
 
 # Simple CNN taken from the SB3 custom Policy example
 class CNN_Extractor(BaseFeaturesExtractor):
@@ -92,11 +91,11 @@ class CNN_Extractor_Resnet(BaseFeaturesExtractor):
         # RESNET
         self.resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
         
-        for name, param in self.resnet18.named_parameters():
-            if "fc" in name:  # Unfreeze the final classification layer
-                param.requires_grad = True
-            else:
-                param.requires_grad = False
+        # for name, param in self.resnet18.named_parameters():
+        #     if "fc" in name:  # Unfreeze the final classification layer
+        #         param.requires_grad = True
+        #     else:
+        #         param.requires_grad = False
 
         # # NATURE CNN
         # self.nature_cnn = nn.Sequential(
@@ -204,9 +203,9 @@ if __name__ == "__main__":
 
     testbed.model.set_parameters({"policy": policy_state_dict_copy}, exact_match = False)
 
-    for name, param in testbed.model.policy.named_parameters():
-        if ("resnet18" in name) and ("fc" not in name):
-            param.require_grad = False
+    # for name, param in testbed.model.policy.named_parameters():
+    #     if ("resnet18" in name) and ("fc" not in name):
+    #         param.require_grad = False
 
     testbed.train(1_000_000)
     

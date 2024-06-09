@@ -9,6 +9,8 @@ import os
 import sys
 sys.path.append('utils')
 
+from PIL import Image
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -137,7 +139,7 @@ class Image_Vision():
         bounding_box = left, top, right, bottom
         with mss() as sct:
             frame = np.array(sct.grab(bounding_box)) 
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
         # frame = cv2.resize(frame, (256, 256))
         # print(frame[0][0])
         self.frame = frame
@@ -151,6 +153,8 @@ class Image_Vision():
         frame = self.frame
         
         cv2.imshow("frame", frame)
+        # img = Image.fromarray(frame)
+        # img.show()
 
         cv2.imshow("left", self.left)
         cv2.imshow("right", self.left)
