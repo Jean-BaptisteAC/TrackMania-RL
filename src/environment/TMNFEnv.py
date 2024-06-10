@@ -215,7 +215,6 @@ class TrackmaniaEnv(Env):
         special_reward, done, truncated, info  = self.check_state()
         if special_reward is not None:
             reward = special_reward
-        
 
         self.client.reset_last_action_timer()
 
@@ -336,13 +335,6 @@ class TrackmaniaEnv(Env):
                     self.total_distance = 0
 
                 self.reset()
-
-        # Check for contact with barriers in lidar mode
-        if self.viewer.touch_boarder():
-            done = True
-            special_reward = -10
-            info["total_distance"] = self.total_distance
-            self.reset()
 
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
