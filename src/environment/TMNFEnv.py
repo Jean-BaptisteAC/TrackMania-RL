@@ -347,17 +347,20 @@ class TrackmaniaEnv(Env):
         
         # Check for reverse traveling during time_optimization
         if self.last_reset_time_step >= 20:
-            if self.velocity()[2] < 1 and self.training_mode == "time_optimization":
+            if self.training_mode == "time_optimization":
                 progress_reward = self.eq_time - self.previous_centerline_time[0]
                 if progress_reward < 0:
                     done = True
                     special_reward = -10
 
-                    info["total_distance"] = self.total_distance
-                    info["percentage_progress"] = self.compute_centerline_percentage_progression()
+
+                    if self.training_track is None:
+                        info["total_distance"] = self.total_distance
+                        info["percentage_progress"] = self.compute_centerline_percentage_progression()
+                        self.total_distance = 0
 
                     self.reset()
-                    
+
         return special_reward, done, truncated, info
 
 
