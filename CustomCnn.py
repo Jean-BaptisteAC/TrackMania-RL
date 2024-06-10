@@ -131,9 +131,8 @@ if __name__ == "__main__":
     algorithm = "PPO"
     model_name = "PPO_Resnet_Full_RGB_Test"
 
-    parameters_dict = {"observation_space":"image", 
-                       "dimension_reduction":6,
-                       "training_track":"A03",
+    parameters_dict = {"dimension_reduction":6,
+                       "training_track":"C01",
                        "training_mode":"time_optimization",
                        "is_testing":False, 
                        "action_mode":None}
@@ -149,6 +148,7 @@ if __name__ == "__main__":
     seed=0
     learning_rate = 1e-4
     use_sde = True
+
     n_steps = 1024
 
     testbed = TestBed(algorithm=algorithm,

@@ -9,7 +9,7 @@ from gymnasium import Env
 from gymnasium.spaces import Box, Dict
 
 from .TMIClient import CustomClient
-from .utils.GameCapture import Lidar_Vision, Image_Vision
+from .utils.GameCapture import Image_Vision
 
 from tminterface.interface import TMInterface
 
@@ -42,7 +42,6 @@ class TrackmaniaEnv(Env):
     """
     def __init__(
         self,
-        observation_space: str = "image",
         dimension_reduction: int = 6,
         training_track: str | None = None,
         training_mode: str = "exploration",
@@ -53,24 +52,15 @@ class TrackmaniaEnv(Env):
         self.action_space = Box(
             low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
         )   
-
-        if observation_space == "lidar":
-            self.observation_type = "lidar"
-            self.viewer = Lidar_Vision()
-            self.observation_space = Box(
-                low=-1.0, high=1.0, shape=(17,), dtype=np.float64
-            )
-            
-
-        elif observation_space == "image":
-            self.observation_type = "image"
-            self.viewer = Image_Vision(dimension_reduction=dimension_reduction)
-            obs, _ = self.viewer.get_obs()
-            image_shape = obs.shape
-            self.observation_space = Dict(
-                {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(9, ), dtype=np.float64)}
-            )
+        
+        self.observation_type = "image"
+        self.viewer = Image_Vision(dimension_reduction=dimension_reduction)
+        obs, _ = self.viewer.get_obs()
+        image_shape = obs.shape
+        self.observation_space = Dict(
+            {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
+                "physics": Box(low=-1.0, high=1.0, shape=(9, ), dtype=np.float64)}
+        )
 
         self.interface = TMInterface()
         self.client = CustomClient(action_mode)
@@ -103,7 +93,7 @@ class TrackmaniaEnv(Env):
  
         elif self.training_mode == "time_optimization":
             # For time_optimization only
-            self.episode_length = 1000
+            self.episode_length = 2048
 
         self.episode_step = 0
         
@@ -215,7 +205,6 @@ class TrackmaniaEnv(Env):
         special_reward, done, truncated, info  = self.check_state()
         if special_reward is not None:
             reward = special_reward
-        
 
         self.client.reset_last_action_timer()
 
@@ -337,13 +326,6 @@ class TrackmaniaEnv(Env):
 
                 self.reset()
 
-        # Check for contact with barriers in lidar mode
-        if self.viewer.touch_boarder():
-            done = True
-            special_reward = -10
-            info["total_distance"] = self.total_distance
-            self.reset()
-
         # Restart the simulation if client was idle due to SB3 update
         if self.client.restart_idle:
             done = True
@@ -363,8 +345,24 @@ class TrackmaniaEnv(Env):
                     truncated = True
                     self.reset()
         
+        # Check for reverse traveling during time_optimization
+        if self.last_reset_time_step >= 20:
+            if self.training_mode == "time_optimization":
+                progress_reward = self.eq_time - self.previous_centerline_time[0]
+                if progress_reward < 0:
+                    done = True
+                    special_reward = -10
+
+
+                    if self.training_track is None:
+                        info["total_distance"] = self.total_distance
+                        info["percentage_progress"] = self.compute_centerline_percentage_progression()
+                        self.total_distance = 0
+
+                    self.reset()
+
         return special_reward, done, truncated, info
-    
+
 
     def observation(self, screen_observation):
         if self.observation_type == "lidar":
@@ -376,7 +374,7 @@ class TrackmaniaEnv(Env):
                            "physics": torch.tensor(self.physics_instruments(), dtype=torch.float64)
             }
         return observation 
-        
+    
     
     def velocity(self):
         # Projection of the speed vector on the direction of the car
@@ -490,7 +488,7 @@ class TrackmaniaEnv(Env):
         eq_time = alpha2[glob_min_idx]*self.finish_time
 
         return min_d, eq_time
-    
+
     def compute_centerline_percentage_progression(self):
         x = self.percentage_progression_centerline[:,0]
         y = self.percentage_progression_centerline[:,1]

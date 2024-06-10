@@ -69,6 +69,8 @@ class TestBed:
             SB3_arguments["train_freq"] = kwargs["train_freq"]
         if "use_sde " in kwargs:
             SB3_arguments["use_sde "] = kwargs["use_sde "]
+        if "n_steps" in kwargs:
+            SB3_arguments["n_steps"] = kwargs["n_steps"]
         if "seed" in kwargs:
             SB3_arguments["seed"] = kwargs["seed"]
         else:
@@ -80,9 +82,6 @@ class TestBed:
         self.logdir = "logs"
         if not os.path.exists(self.logdir):
             os.makedirs(self.logdir)
-
-        if self.algorithm == "PPO":
-            SB3_arguments["n_steps"] = 6144
 
         if "n_steps" in kwargs:
             SB3_arguments["n_steps"] = kwargs["n_steps"]
