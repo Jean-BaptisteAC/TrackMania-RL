@@ -355,8 +355,19 @@ class TrackmaniaEnv(Env):
                     truncated = True
                     self.reset()
         
+        # Check for reverse traveling during time_optimization
+        if self.last_reset_time_step >= 20:
+            if self.velocity()[2] < 1 and self.training_mode == "time_optimization":
+                progress_reward = self.eq_time - self.previous_centerline_time[0]
+                if progress_reward < 0:
+                    done = True
+                    special_reward = -10
+
+                    info["total_distance"] = self.total_distance
+                    info["percentage_progress"] = self.compute_centerline_percentage_progression()
+
         return special_reward, done, truncated, info
-    
+
 
     def observation(self, screen_observation):
         if self.observation_type == "lidar":
@@ -368,7 +379,7 @@ class TrackmaniaEnv(Env):
                            "physics": torch.tensor(self.physics_instruments(), dtype=torch.float64)
             }
         return observation 
-        
+    
     
     def velocity(self):
         # Projection of the speed vector on the direction of the car
@@ -482,7 +493,7 @@ class TrackmaniaEnv(Env):
         eq_time = alpha2[glob_min_idx]*self.finish_time
 
         return min_d, eq_time
-    
+
     def compute_centerline_percentage_progression(self):
         x = self.percentage_progression_centerline[:,0]
         y = self.percentage_progression_centerline[:,1]

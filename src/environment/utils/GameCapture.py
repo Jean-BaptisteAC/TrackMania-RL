@@ -68,7 +68,6 @@ class Image_Vision():
             cv2.destroyAllWindows()
             self.is_running = False
 
-        
             
     def get_obs(self):
         self.get_frame()
