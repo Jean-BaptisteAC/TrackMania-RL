@@ -9,7 +9,7 @@ from gymnasium import Env
 from gymnasium.spaces import Box, Dict
 
 from .TMIClient import CustomClient
-from .utils.GameCapture import Lidar_Vision, Image_Vision
+from .utils.GameCapture import Image_Vision
 
 from tminterface.interface import TMInterface
 
@@ -42,7 +42,6 @@ class TrackmaniaEnv(Env):
     """
     def __init__(
         self,
-        observation_space: str = "image",
         dimension_reduction: int = 6,
         training_track: str | None = None,
         training_mode: str = "exploration",
@@ -53,24 +52,15 @@ class TrackmaniaEnv(Env):
         self.action_space = Box(
             low=np.array([-1.0, 0.0, 0.0]), high=np.array([1.0, 1.0, 1.0]), shape=(3,), dtype=np.float32
         )   
-
-        if observation_space == "lidar":
-            self.observation_type = "lidar"
-            self.viewer = Lidar_Vision()
-            self.observation_space = Box(
-                low=-1.0, high=1.0, shape=(17,), dtype=np.float64
-            )
-            
-
-        elif observation_space == "image":
-            self.observation_type = "image"
-            self.viewer = Image_Vision(dimension_reduction=dimension_reduction)
-            obs, _ = self.viewer.get_obs()
-            image_shape = obs.shape
-            self.observation_space = Dict(
-                {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
-                 "physics": Box(low=-1.0, high=1.0, shape=(9, ), dtype=np.float64)}
-            )
+        
+        self.observation_type = "image"
+        self.viewer = Image_Vision(dimension_reduction=dimension_reduction)
+        obs, _ = self.viewer.get_obs()
+        image_shape = obs.shape
+        self.observation_space = Dict(
+            {"image": Box(low=0.0, high=255, shape=image_shape, dtype=np.uint8), 
+                "physics": Box(low=-1.0, high=1.0, shape=(9, ), dtype=np.float64)}
+        )
 
         self.interface = TMInterface()
         self.client = CustomClient(action_mode)

@@ -73,8 +73,7 @@ if __name__ == "__main__":
     algorithm = "PPO"
     model_name = "PPO_C01_TO_speed=1.2"
 
-    parameters_dict = {"observation_space":"image", 
-                       "dimension_reduction":6,
+    parameters_dict = {"dimension_reduction":6,
                        "training_track":"C01",
                        "training_mode":"time_optimization",
                        "is_testing":False}

@@ -5,8 +5,7 @@ import keyboard
 
 if __name__ == "__main__":
 
-    env = TrackmaniaEnv(observation_space="image", 
-                        dimension_reduction=6,
+    env = TrackmaniaEnv(dimension_reduction=6,
                         training_track="C01", 
                         training_mode="exploration", 
                         render_mode=None, 
