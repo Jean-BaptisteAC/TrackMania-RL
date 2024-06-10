@@ -6,7 +6,7 @@ import time
 if __name__ == "__main__":
     env =  TrackmaniaEnv(observation_space="image", 
                          dimension_reduction=6, 
-                         training_track="A03",
+                         training_track="C01",
                          training_mode="time_optimization", 
                          is_testing = False, 
                          action_mode="human")
