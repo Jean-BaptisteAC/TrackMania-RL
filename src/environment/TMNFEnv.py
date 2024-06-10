@@ -356,6 +356,8 @@ class TrackmaniaEnv(Env):
                     info["total_distance"] = self.total_distance
                     info["percentage_progress"] = self.compute_centerline_percentage_progression()
 
+                    self.reset()
+                    
         return special_reward, done, truncated, info
 
 
