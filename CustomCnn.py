@@ -129,7 +129,7 @@ if __name__ == "__main__":
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_Resnet_Full_RGB"
+    model_name = "PPO_Resnet_Full_RGB_Test"
 
     parameters_dict = {"observation_space":"image", 
                        "dimension_reduction":6,

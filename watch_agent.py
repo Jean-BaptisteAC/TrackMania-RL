@@ -15,8 +15,8 @@ if __name__ == "__main__":
 
     model_type = "PPO"
     models_dir = "models/" + model_type
-    model_watch_name = "/PPO_A03_time_optimization_small_cnn_from_scratch"
-    model_step = "86k"
+    model_watch_name = "/PPO_Resnet_Full_RGB_Test"
+    model_step = "36k"
 
     model_path = f"{models_dir}/{model_watch_name}/{model_step}"
     model_to_watch = PPO.load(model_path, env=env)
