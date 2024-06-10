@@ -5,8 +5,11 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from gymnasium import spaces
 import torch as th
 from torch import nn
+from torchvision import transforms, models
+from torchvision.models import ResNet18_Weights
 
 from TestBed import TestBed
+
 
 # Simple CNN taken from the SB3 custom Policy example
 class CNN_Extractor(BaseFeaturesExtractor):
@@ -48,6 +51,7 @@ class CNN_Extractor(BaseFeaturesExtractor):
         )
 
 
+
         # Compute shape by doing one forward pass
         with th.no_grad():
             n_flatten = self.cnn_base(
@@ -64,32 +68,88 @@ class CNN_Extractor(BaseFeaturesExtractor):
         image_embedding = self.cnn_head(self.cnn_base(observation["image"]))
         embedding = th.cat([image_embedding, observation["physics"]], dim=1)
         return embedding
+    
 
+class CNN_Extractor_Resnet(BaseFeaturesExtractor):
+    """
+    :param observation_space: (gym.Space)
+    :param features_dim: (int) Number of features extracted.
+
+        This corresponds to the number of unit for the last layer.
+    """
+
+    def __init__(self, observation_space: spaces.Dict, features_dim: int = 64):
+        super().__init__(observation_space, features_dim)
+        
+        n_input_channels = observation_space["image"].shape[0]
+        self.input_size = observation_space["image"]
+
+        self.preprocess = ResNet18_Weights.DEFAULT.transforms(antialias=True)
+
+        self.image_is_saved = False
+
+        # RESNET
+        self.resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+        
+        # for name, param in self.resnet18.named_parameters():
+        #     if "fc" in name:  # Unfreeze the final classification layer
+        #         param.requires_grad = True
+        #     else:
+        #         param.requires_grad = False
+
+        # # NATURE CNN
+        # self.nature_cnn = nn.Sequential(
+        #     nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+        #     nn.ReLU(),
+        #     nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+        #     nn.ReLU(),
+        #     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+        #     nn.ReLU(),
+        #     nn.Flatten(),
+        # )
+
+        self.cnn_head = nn.Sequential(
+            nn.ReLU()
+            )
+
+        print("INITALISATION:")
+        print(self.resnet18.conv1.weight[0][0])
+    
+    def forward(self, observation: spaces.Dict) -> Tuple[th.Tensor, th.Tensor]:
+
+        image = observation["image"]
+        # print(image.shape)
+        preprocessed_image = self.preprocess(image)
+        image_embedding = self.cnn_head(self.resnet18(preprocessed_image))
+        embedding = th.cat([image_embedding, observation["physics"]], dim=1)
+        return embedding
 
 if __name__ == "__main__":
 
     """ TRAIN AGENT """
 
     algorithm = "PPO"
-    model_name = "PPO_C01_TO_speed=1.2"
+    model_name = "PPO_Resnet_Full_RGB_Test"
 
     parameters_dict = {"dimension_reduction":6,
                        "training_track":"C01",
                        "training_mode":"time_optimization",
-                       "is_testing":False}
+                       "is_testing":False, 
+                       "action_mode":None}
     
-
     save_interval = 12_288
     policy_kwargs = dict(
-        features_extractor_class=CNN_Extractor,
-        features_extractor_kwargs=dict(features_dim=256),
+        features_extractor_class=CNN_Extractor_Resnet,
+        features_extractor_kwargs=dict(features_dim=1009),
+        normalize_images=False,
         activation_fn=th.nn.Tanh, 
         net_arch=[256, 256],
     )   
     seed=0
     learning_rate = 1e-4
     use_sde = True
-    n_steps = 2048
+
+    n_steps = 1024
 
     testbed = TestBed(algorithm=algorithm,
                       policy="MultiInputPolicy",
@@ -99,13 +159,42 @@ if __name__ == "__main__":
                       policy_kwargs=policy_kwargs,
                       seed=seed,
                       learning_rate=learning_rate, 
-                      use_sde=use_sde, 
+                      use_sde=use_sde,
                       n_steps=n_steps)
     
     # print(testbed.model.policy)
     
-    agent_path = "models/PPO/PPO_Training_Dataset_Tech_2_small_CNN/1277k"
-    testbed.load_agent(model_path=agent_path, step=1_277_000, parameters_to_change={"n_steps":2048})
+    # agent_path = "models/PPO/PPO_resnet_true_weights/24k"
+    # testbed.load_agent(model_path=agent_path, step=24_000, parameters_to_change={})
+    
+    # CHANGE WEIGHTS FOR RESNET18
+    
+    def create_resnet18_state_dict(dict_name, resnet18):
+        dictionary = {}
+        for layer_name in resnet18.state_dict():
+            modified_name = f"{dict_name}.resnet18.{layer_name}"
+            dictionary[modified_name] = resnet18.state_dict()[layer_name]
+        return dictionary
+    
+    resnet18 = models.resnet18(weights=ResNet18_Weights.DEFAULT)
+    resnet18.to("cuda")
+
+    resnet18_state_dict_pi_features_extractor = create_resnet18_state_dict("pi_features_extractor", resnet18)
+    resnet18_state_dict_vf_features_extractor = create_resnet18_state_dict("vf_features_extractor", resnet18)
+    resnet18_state_dict_features_extractor = create_resnet18_state_dict("features_extractor", resnet18)
+
+    policy_state_dict_copy = testbed.model.policy.state_dict().copy()
+    for name in policy_state_dict_copy:
+        if name in resnet18_state_dict_pi_features_extractor:
+            policy_state_dict_copy[name] = resnet18_state_dict_pi_features_extractor[name]
+
+        if name in resnet18_state_dict_vf_features_extractor:
+            policy_state_dict_copy[name] = resnet18_state_dict_vf_features_extractor[name]
+
+        if name in resnet18_state_dict_features_extractor:
+            policy_state_dict_copy[name] = resnet18_state_dict_features_extractor[name]
+
+    testbed.model.set_parameters({"policy": policy_state_dict_copy}, exact_match = False)
 
     testbed.train(1_000_000)
     

@@ -8,9 +8,12 @@ if __name__ == "__main__":
                          training_track="C01",
                          training_mode="time_optimization", 
                          is_testing = False, 
-                         action_mode="human")
+                         action_mode="human", 
+                         render_mode="human")
 
     i = 0
+
+    obs, _ = env.reset()
 
     while True:
     
@@ -18,11 +21,11 @@ if __name__ == "__main__":
 
         new_observation, reward, done, truncated, info = env.step(action)
 
-        i += 1
-        if i == 5:
-            if reward > 0:
-                print("reward", reward)
-            i = 0
+        # i += 1
+        # if i == 5:
+        #     # if reward > 0:
+        #     #     print("reward", reward)
+        #     # i = 0
 
         try:
             if keyboard.is_pressed("q"):

@@ -9,6 +9,8 @@ import os
 import sys
 sys.path.append('utils')
 
+from PIL import Image
+
 from dotenv import load_dotenv
 load_dotenv()
     
@@ -18,9 +20,9 @@ class Image_Vision():
         self.hwnd = wind32.FindWindow(None, os.getenv('GAME_WINDOW_NAME'))
 
         # Crop the screenshot to remove unecessary information and reduce dimensionality
-        self.lateral_margin = 10 + 2
-        self.upper_margin = 40 + 150
-        self.lower_margin = 10 + 50
+        self.lateral_margin = 10 + 83
+        self.upper_margin = 40 + 3
+        self.lower_margin = 10 + 2
         self.dimension_reduction = dimension_reduction
             
         self.get_frame()
@@ -38,31 +40,21 @@ class Image_Vision():
         bounding_box = left, top, right, bottom
         with mss() as sct:
             frame = np.array(sct.grab(bounding_box)) 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        dim = (int(frame.shape[1]/self.dimension_reduction),
-               int(frame.shape[0]/self.dimension_reduction))
-    
-
-        if dim[0] % 2 == 1:
-            dim = (dim[0] + 1, dim[1])
-        
-        frame = cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+        # frame = cv2.resize(frame, (256, 256))
+        # print(frame[0][0])
         self.frame = frame
     
 
     def show(self):
         frame = self.frame
         
-        dim = (int(frame.shape[1]*self.dimension_reduction),
-               int(frame.shape[0]*self.dimension_reduction))
-        cv2.imshow("frame", cv2.resize(frame, dim, interpolation = cv2.INTER_NEAREST))
+        cv2.imshow("frame", frame)
+        # img = Image.fromarray(frame)
+        # img.show()
 
-        
-        left_right_dim = (int(self.left.shape[1]*self.dimension_reduction),
-                          int(self.left.shape[0]*self.dimension_reduction))
-
-        cv2.imshow("left", cv2.resize(self.left, left_right_dim, interpolation = cv2.INTER_NEAREST))
-        cv2.imshow("right", cv2.resize(self.right, left_right_dim, interpolation = cv2.INTER_NEAREST))
+        cv2.imshow("left", self.left)
+        cv2.imshow("right", self.left)
         
         if (cv2.waitKey(1) & 0xFF) == ord("q"):
             cv2.destroyAllWindows()
@@ -72,8 +64,7 @@ class Image_Vision():
     def get_obs(self):
         self.get_frame()
         # Image in shape (H, W, 1) pixels value in [0, 255] because SB3 automatically scales the features for images
-        observation = np.reshape(np.array(self.frame), 
-                                 (self.frame.shape[0],self.frame.shape[1] , 1))
+        observation = self.frame
         
         asymmetry = self.get_asymmetry()
         return observation, asymmetry

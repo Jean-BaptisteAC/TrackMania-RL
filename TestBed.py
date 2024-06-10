@@ -82,6 +82,9 @@ class TestBed:
         self.logdir = "logs"
         if not os.path.exists(self.logdir):
             os.makedirs(self.logdir)
+
+        if "n_steps" in kwargs:
+            SB3_arguments["n_steps"] = kwargs["n_steps"]
         
         self.model = return_model(algorithm)(self.policy,
                                              self.env,
