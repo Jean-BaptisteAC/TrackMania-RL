@@ -6,7 +6,7 @@ import keyboard
 if __name__ == "__main__":
 
     env = TrackmaniaEnv(dimension_reduction=6,
-                        training_track="C01", 
+                        training_track="B02", 
                         training_mode="exploration", 
                         render_mode=None, 
                         is_testing=True,
@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     model_type = "PPO"
     models_dir = "models/" + model_type
-    model_watch_name = "PPO_C01_TO_speed=1.2"
+    model_watch_name = "PPO_B02_TO_speed=2"
     model_step = "1498k"
 
     model_path = f"{models_dir}/{model_watch_name}/{model_step}"
